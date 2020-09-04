@@ -1,0 +1,68 @@
+<template>
+	<view>
+		<free-nav-bar :title="true">
+			<template slot="title">{{title}}{{msgNum|msgNumFilter}}</template>
+		</free-nav-bar>
+		<!-- 列表 -->
+		<block v-for="(item,index) in list" :key="index">
+			<free-media-list :item="item" :index="index" @click="itemClick"></free-media-list>
+		</block>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "../../../components/free-ui/free-nav-bar.vue"
+	import freeMediaList from "../../../components/free-ui/free-media-list.vue"
+	export default {
+		components: {
+			freeMediaList,
+			freeNavBar
+		},
+		data() {
+			return {
+				title: '聊天',
+				msgNum: 10, //现有未处理聊天
+				list: [{
+						avatar: '../../../static/images/avatar/144.jpg',
+						nickname: '小迷妹',
+						update_time: '1599207514',
+						data: 'Ni是无意过堂风',
+						noreadnum: 2
+					},
+					{
+						avatar: '../../../static/images/avatar/144.jpg',
+						nickname: 'Gene',
+						update_time: '1598948037',
+						data: 'Ni',
+						noreadnum: 0
+					},
+					{
+						avatar: '../../../static/images/avatar/144.jpg',
+						nickname: 'Gene',
+						update_time: '1567325637',
+						data: 'Ni',
+						noreadnum: 0
+					}
+				]
+			}
+		},
+		filters: {
+			msgNumFilter(num) {
+				if (num > 99) return '(99+)'
+				else return num !== 0 ? '(' + num + ')' : ''
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+			itemClick(index) {
+				console.log(index)
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+
+</style>

@@ -1,16 +1,60 @@
 {
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
-			"path": "pages/index/index",
+			"path": "pages/tabbar/index/index",
 			"style": {
-				"navigationBarTitleText": "uni-app"
+				
 			}
+		}, {
+			"path": "pages/tabbar/mail/mail",
+			"style": {}
+		}, {
+			"path": "pages/tabbar/find/find",
+			"style": {}
+		}, {
+			"path": "pages/tabbar/my/my",
+			"style": {}
 		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
+		"navigationBarTitleText": "Foxxin",
 		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
+		"backgroundColor": "#F8F8F8",
+		"app-plus": {
+			"titleNView": false,
+			"scrollIndicator":"none"
+		}
+	},
+	"tabBar": {
+		"borderStyle": "black",
+		"backgroundColor": "#F7F7F7",
+		"color": "#000000",
+		"selectedColor": "#08C261",
+		"list": [{
+				"iconPath": "static/tabbarIcon/index.png",
+				"selectedIconPath": "static/tabbarIcon/index-select.png",
+				"text": "首页",
+				"pagePath": "pages/tabbar/index/index"
+			},
+			{
+				"iconPath": "static/tabbarIcon/mail.png",
+				"selectedIconPath": "static/tabbarIcon/mail-select.png",
+				"text": "通讯录",
+				"pagePath": "pages/tabbar/mail/mail"
+			},
+			{
+				"iconPath": "static/tabbarIcon/find.png",
+				"selectedIconPath": "static/tabbarIcon/find-select.png",
+				"text": "发现",
+				"pagePath": "pages/tabbar/find/find"
+			},
+			{
+				"iconPath": "static/tabbarIcon/my.png",
+				"selectedIconPath": "static/tabbarIcon/my-select.png",
+				"text": "我的",
+				"pagePath": "pages/tabbar/my/my"
+			}
+		]
 	}
 }
