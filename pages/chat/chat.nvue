@@ -1,13 +1,14 @@
 <template>
 	<view>
 		<free-nav-bar title="Gene" showBack>
-			<free-icon-btn slot="right">&#xe615;</free-icon-btn>
+			<free-icon-btn slot="right" @click="btnMore">&#xe615;</free-icon-btn>
 		</free-nav-bar>
 		<!-- 聊天内容 -->
-		<scroll-view scroll-y :show-scrollbar="false" class="bg-light position-fixed left-0 right-0 px-3" :style="scrollStyle">
+		<scroll-view scroll-y :scroll-top="slideBottom" :show-scrollbar="false" class="bg-light position-fixed left-0 right-0 px-3"
+		 :style="scrollStyle">
 			<!-- 内容列表组件 -->
 			<block v-for="(item,index) in list" :key="index">
-				<free-chat-item :item="item" :index="index" :pretime="index>0?list[index-1].createtime:0" @clickLong="chickLong"></free-chat-item>
+				<free-chat-item ref="chatItem" :item="item" :index="index" :pretime="index>0?list[index-1].createtime:0" @clickLong="chickLong"></free-chat-item>
 			</block>
 		</scroll-view>
 		<!-- 气泡弹出层 -->
@@ -22,11 +23,29 @@
 		<view class="flex flex-row position-fixed right-0 left-0 border-top align-center" style="background: #F7F7F6;" :style="'bottom:'+KeyboardHeight+'px;'">
 			<free-icon-btn>&#xe60f;</free-icon-btn>
 			<view class="flex-1">
-				<textarea fixed :adjust-position="false" class="rounded bg-white font-md" style="height:60rpx;width: 100%;line-height: 60rpx;"></textarea>
+				<textarea fixed :adjust-position="false" class="rounded bg-white font-md" style="height:60rpx;width: 100%;line-height: 60rpx;"
+				 v-model="text"></textarea>
 			</view>
 			<free-icon-btn>&#xe657;</free-icon-btn>
-			<free-icon-btn>&#xe60d;</free-icon-btn>
+			<free-icon-btn v-if="!sendBtnShow" @click="openAction">&#xe60d;</free-icon-btn>
+			<!-- 发送按钮 -->
+			<view v-if="sendBtnShow" @click="sendMsg('text')" hover-class="bg-chat-item" class="main-bg-color rounded mr-2">
+				<text class="font-md text-white px-2 py-1">发送</text>
+			</view>
 		</view>
+
+		<!-- 拓展菜单 弹出层 -->
+		<free-popup ref="action" Bottom @hide="KeyboardHeight=0">
+			<view class="border-top" style="height: 550rpx;">
+				<swiper :indicator-dots="true" style="height: 510rpx;">
+					<swiper-item class="swiper-item row">
+						<view class="col-3">1</view>
+						<view class="col-3">2</view>
+						<view class="col-3">3</view>
+					</swiper-item>
+				</swiper>
+			</view>
+		</free-popup>
 	</view>
 </template>
 
@@ -46,6 +65,8 @@
 		},
 		data() {
 			return {
+				text: '', // 输入文字
+				slideBottom: 10000, // scrollview 默认滑动距离
 				KeyboardHeight: 0, // 软键盘高度
 				navBarHeight: 0,
 				propIndex: -1, // 当前操作的气泡索引
@@ -158,6 +179,51 @@
 				statusBarHeight = plus.navigator.getStatusbarHeight()
 				// #endif
 				this.navBarHeight = statusBarHeight + uni.upx2px(90) // 90rpx高度转为px
+			},
+			// 回到底部
+			scrollToBottom() {
+				// #ifdef APP-PLUS-NVUE
+				let items = this.$refs.chatItem
+				let lastIndex = items.length > 0 ? items.length - 1 : 0
+				if (items[lastIndex]) {
+					dom.scrollToElement(items[lastIndex], {})
+				}
+				// #endif
+				this.slideBottom += 500
+			},
+			// 右上角更多按钮
+			btnMore() {},
+			// 发送消息
+			async sendMsg(type) {
+				let time = (new Date()).getTime()
+				let obj = {
+					user_id: 1,
+					avatar: '/static/images/avatar/134.jpg',
+					nickname: '昵称',
+					createtime: time,
+					isremove: false
+				}
+				switch (type) {
+					case 'text':
+						obj.type = type
+						obj.data = this.text
+						break;
+					case 'audio':
+						break;
+					case 'video':
+						break;
+					case 'img':
+						break;
+				}
+				await this.list.push(obj)
+				this.text = ''
+				this.scrollToBottom()
+			},
+			// 打开底部拓展菜单
+			openAction() {
+				this.$refs.action.show()
+				this.KeyboardHeight = uni.upx2px(550)
+				this.scrollToBottom()
 			}
 		},
 		mounted() {
@@ -166,6 +232,7 @@
 			uni.onKeyboardHeightChange(res => {
 				this.KeyboardHeight = res.height;
 			})
+			this.scrollToBottom()
 		},
 		computed: {
 			scrollStyle() {
@@ -188,6 +255,9 @@
 					if (v.name === "撤回" && !this.isDoSelf) return false
 					return true
 				})
+			},
+			sendBtnShow() {
+				return this.text !== '' ? true : false
 			}
 		}
 	}
@@ -207,6 +277,17 @@
 
 		view:last-child {
 			border-bottom: none;
+		}
+	}
+
+	.border-top {
+		border-top: 1px solid #cccccc !important;
+	}
+
+	.swiper-item {
+		view {
+			height: 255rpx;
+			border: 1px solid #eeeeee;
 		}
 	}
 </style>

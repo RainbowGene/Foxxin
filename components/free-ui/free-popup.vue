@@ -87,6 +87,7 @@
 			},
 			hidden() {
 				this.status = false
+				this.$emit('hide')
 			}
 		}
 	}

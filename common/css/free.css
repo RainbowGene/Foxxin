@@ -15,6 +15,10 @@
 	width: 750rpx;
 }
 
+.w-25{
+	width: 25%!important;
+}
+
 .row {
 	margin-right: -20rpx;
 	margin-left: -20rpx;
