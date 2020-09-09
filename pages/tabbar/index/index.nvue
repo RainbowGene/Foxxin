@@ -1,68 +1,165 @@
 <template>
 	<view>
-		<free-nav-bar :title="true">
-			<template slot="title">{{title}}{{msgNum|msgNumFilter}}</template>
+		<free-nav-bar :title="title" :noread="msgNum">
 		</free-nav-bar>
-		<!-- 列表 -->
 		<block v-for="(item,index) in list" :key="index">
-			<free-media-list :item="item" :index="index" @click="itemClick"></free-media-list>
+			<!-- 置顶列表 -->
+			<free-media-list v-if="item.istop" :item="item" :index="index" @click="itemClick" @clickLong="clickLong"></free-media-list>
 		</block>
+		<!-- 非置顶列表 -->
+		<block v-for="(item,index) in list" :key="index">
+			<free-media-list v-if="!item.istop" :item="item" :index="index" @click="itemClick" @clickLong="clickLong"></free-media-list>
+		</block>
+		<!-- 列表长按弹出层 -->
+		<free-popup ref="extend" :bodyW="240" :bodyH="menuHeight">
+			<view class="popup-content" :style='menuStyle'>
+				<view class="pl-3" hover-class="bg-light" v-for="(item,index) in menus" :key="index" @click="clickEvent(item.event)">
+					<text>{{item.name}}</text>
+				</view>
+			</view>
+		</free-popup>
 	</view>
 </template>
 
 <script>
+	import freePopup from "../../../components/free-ui/free-popup.vue"
 	import freeNavBar from "../../../components/free-ui/free-nav-bar.vue"
 	import freeMediaList from "../../../components/free-ui/free-media-list.vue"
 	export default {
 		components: {
 			freeMediaList,
-			freeNavBar
+			freeNavBar,
+			freePopup
 		},
 		data() {
 			return {
+				propIndex: -1, // 默认没有操作
 				title: '聊天',
 				msgNum: 10, //现有未处理聊天
+				menus: [{
+						name: '设为置顶',
+						event: 'setTop'
+					},
+					{
+						name: '删除该聊天',
+						event: 'delChat'
+					}
+				],
 				list: [{
 						avatar: '../../../static/images/avatar/144.jpg',
 						nickname: '小迷妹',
 						update_time: '1599207514',
 						data: 'Ni是无意过堂风',
-						noreadnum: 2
+						noreadnum: 2,
+						istop: false
 					},
 					{
 						avatar: '../../../static/images/avatar/144.jpg',
-						nickname: 'Gene',
+						nickname: 'Gene1',
 						update_time: '1598948037',
 						data: 'Ni',
-						noreadnum: 0
+						noreadnum: 0,
+						istop: false
 					},
 					{
 						avatar: '../../../static/images/avatar/144.jpg',
-						nickname: 'Gene',
+						nickname: 'Gene2',
 						update_time: '1567325637',
 						data: 'Ni',
-						noreadnum: 0
+						noreadnum: 0,
+						istop: true
+					},
+					{
+						avatar: '../../../static/images/avatar/144.jpg',
+						nickname: 'Gene3',
+						update_time: '1567325637',
+						data: 'Ni',
+						noreadnum: 0,
+						istop: false
+					},
+					{
+						avatar: '../../../static/images/avatar/144.jpg',
+						nickname: 'Gene4',
+						update_time: '1567325637',
+						data: 'Ni',
+						noreadnum: 0,
+						istop: false
+					},
+					{
+						avatar: '../../../static/images/avatar/144.jpg',
+						nickname: 'Gene5',
+						update_time: '1567325637',
+						data: 'Ni',
+						noreadnum: 0,
+						istop: false
 					}
 				]
-			}
-		},
-		filters: {
-			msgNumFilter(num) {
-				if (num > 99) return '(99+)'
-				else return num !== 0 ? '(' + num + ')' : ''
 			}
 		},
 		onLoad() {
 
 		},
+		computed: {
+			menuHeight() {
+				return this.menus.length * 100
+			},
+			menuStyle() {     
+				return `width:240rpx;height:${this.menuHeight}rpx;`
+			}
+		},
 		methods: {
+			// 进入聊天
 			itemClick(index) {
 				console.log(index)
+			},
+			// 长按弹出
+			clickLong(obj) {
+				let {
+					x,
+					y
+				} = obj
+				this.propIndex = obj.index // 用于长按菜单操作
+				this.menus[0].name = this.list[this.propIndex].istop ? '取消置顶' : '设为置顶'
+				this.$refs.extend.show(x, y)
+			},
+			// 分发菜单事件
+			clickEvent(e) {
+				switch (e) {
+					case "setTop":
+						this.setTop()
+						break;
+					case "delChat":
+						this.delChat()
+						break;
+				}
+				this.$refs.extend.hidden()
+			},
+			// 删除当前会话
+			delChat() {
+				this.list.splice(this.propIndex, 1)
+			},
+			// 置顶/取消置顶会话
+			setTop() {
+				this.list[this.propIndex].istop = !this.list[this.propIndex].istop
 			}
 		}
 	}
 </script>
 
 <style lang="scss" scoped>
+	.popup-content {
+		display: flex;
+		flex-direction: column;
 
+		view {
+			flex: 1;
+			display: flex;
+			justify-content: center;
+			border-bottom: 1px solid #eeeeee;
+		}
+
+		view:last-child {
+			border-bottom: none;
+		}
+	}
 </style>

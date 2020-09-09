@@ -8,6 +8,11 @@
 	/* #ifdef APP-PLUS-NVUE */
 	flex: 1;
 	/* #endif */
+	/* #ifdef H5 */
+	min-height: 100vh;
+	height: auto;
+	flex: 1;
+	/* #endif */
 }
 /* 2. 主背景色（原谅绿） */
 .main-bg-color{

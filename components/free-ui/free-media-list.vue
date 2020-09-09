@@ -1,9 +1,9 @@
 <template>
-	<view hover-class="bg-light">
+	<view v-if="item" :class="item.istop?'bg-light':'bg-white'" hover-class="bg-light">
 		<div class="list-item w-100" hover-class="bg-light" @click="onClick" @longpress="longClick">
 			<view class="item-left position-relative">
 				<free-avatar :src="item.avatar" :size="92"></free-avatar>
-				<free-badge v-if="item.noreadnum" badgeStyle="top:15rpx;right:15rpx;">{{item.noreadnum}}</free-badge>
+				<free-badge v-if="item.noreadnum" badgeStyle="top:15rpx;right:15rpx;" :value="item.noreadnum"></free-badge>
 			</view>
 			<view class="item-right flex-column pr-3 py-3">
 				<view class="top flex-row mb-1">
@@ -17,10 +17,11 @@
 </template>
 
 <script>
+	import freeBase from "../../common/mixin/free-base.js"
 	import freeAvatar from "./free-avatar.vue"
 	import freeBadge from "./free-badge.vue"
-	import $Time from '../../common/js/time.js'
 	export default {
+		mixins: [freeBase],
 		props: {
 			item: Object,
 			index: Number
@@ -29,17 +30,37 @@
 			freeAvatar,
 			freeBadge
 		},
-		filters: {
-			formatTime(time) {
-				return $Time.gettime(time)
-			}
-		},
 		methods: {
 			onClick() {
-				this.$emit("click", this.index)
+				uni.navigateTo({
+					url:"/pages/chat/chat"
+				})
 			},
 			longClick(e) {
-				console.log(e)
+				// console.log(e.changedTouches[0])
+				let x = 0
+				let y = 0
+				// #ifdef APP-PLUS-NVUE
+				if (Array.isArray(e.changedTouches) && e.changedTouches.length > 0) {
+					x = e.changedTouches[0].scrrenX
+					y = e.changedTouches[0].scrrenY
+				}
+				// #endif
+				// #ifdef H5
+				if (Array.isArray(e.changedTouches) && e.changedTouches.length > 0) {
+					x = e.changedTouches[0].clientX
+					y = e.changedTouches[0].clientY
+				}
+				// #endif
+				// #ifdef MP
+				x = e.detail.x
+				y = e.detail.y
+				// #endif
+				this.$emit('clickLong', {
+					x,
+					y,
+					index: this.index
+				})
 			}
 		}
 	}

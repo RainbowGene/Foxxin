@@ -1,5 +1,6 @@
 <template>
-	<text class="msg-badge bg-danger text-white rounded-circle font-sm position-absolute" :class="badgeClass" :style="badgeStyle"><slot></slot></text>
+	<text class="msg-badge bg-danger text-white rounded-circle font-sm position-absolute" :class="badgeClass" :style="badgeStyle">{{value}}</text>
+	<!-- uniapp 的 nvue 编译模式下不推荐在 text中使用 slot -->
 </template>
 
 <script>
@@ -12,6 +13,10 @@
 			badgeStyle: {
 				type: String,
 				default: ""
+			},
+			value:{
+				type:[Number,String],
+				default:''
 			}
 		}
 	}

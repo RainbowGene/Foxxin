@@ -1,0 +1,212 @@
+<template>
+	<view>
+		<free-nav-bar title="Gene" showBack>
+			<free-icon-btn slot="right">&#xe615;</free-icon-btn>
+		</free-nav-bar>
+		<!-- 聊天内容 -->
+		<scroll-view scroll-y :show-scrollbar="false" class="bg-light position-fixed left-0 right-0 px-3" :style="scrollStyle">
+			<!-- 内容列表组件 -->
+			<block v-for="(item,index) in list" :key="index">
+				<free-chat-item :item="item" :index="index" :pretime="index>0?list[index-1].createtime:0" @clickLong="chickLong"></free-chat-item>
+			</block>
+		</scroll-view>
+		<!-- 气泡弹出层 -->
+		<free-popup ref="extend" :bodyW="240" :bodyH="menuHeight" :tabHeight="90">
+			<view class="popup-content" :style='menuStyle'>
+				<view class="pl-3 flex-1" hover-class="bg-light" v-for="(item,index) in getMenus" :key="index" @click="clickEvent(item.event)">
+					<text>{{item.name}}</text>
+				</view>
+			</view>
+		</free-popup>
+		<!-- 底部输入框 -->
+		<view class="flex flex-row position-fixed right-0 left-0 border-top align-center" style="background: #F7F7F6;" :style="'bottom:'+KeyboardHeight+'px;'">
+			<free-icon-btn>&#xe60f;</free-icon-btn>
+			<view class="flex-1">
+				<textarea fixed :adjust-position="false" class="rounded bg-white font-md" style="height:60rpx;width: 100%;line-height: 60rpx;"></textarea>
+			</view>
+			<free-icon-btn>&#xe657;</free-icon-btn>
+			<free-icon-btn>&#xe60d;</free-icon-btn>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeIconBtn from "@/components/free-ui/free-icon-btn.vue"
+	import freeAvatar from "@/components/free-ui/free-avatar.vue"
+	import freeChatItem from "@/components/free-ui/free-chat-item.vue"
+	import freePopup from "@/components/free-ui/free-popup.vue"
+	export default {
+		components: {
+			freeNavBar,
+			freeIconBtn,
+			freeAvatar,
+			freePopup,
+			freeChatItem
+		},
+		data() {
+			return {
+				KeyboardHeight: 0, // 软键盘高度
+				navBarHeight: 0,
+				propIndex: -1, // 当前操作的气泡索引
+				menus: [{
+						name: '复制',
+						event: ''
+					},
+					{
+						name: '发送给朋友',
+						event: ''
+					},
+					{
+						name: '收藏',
+						event: ''
+					},
+					// {
+					// 	name: '提醒',
+					// 	event: ''
+					// },
+					// {
+					// 	name: '翻译',
+					// 	event: ''
+					// },
+					{
+						name: '删除',
+						event: ''
+					},
+					{
+						name: '多选',
+						event: ''
+					},
+					{
+						name: '撤回',
+						event: 'removeChatItem'
+					}
+				],
+				list: [{
+						user_id: 2,
+						avatar: '/static/images/avatar/134.jpg',
+						nickname: '昵称',
+						data: '你在干啥子',
+						type: "text",
+						createtime: '1599536390', // img audio video 等
+						isremove: false
+					},
+					{
+						user_id: 1,
+						avatar: '/static/images/avatar/134.jpg',
+						nickname: '昵称',
+						data: '搬砖啦',
+						type: "text",
+						createtime: '1599536390',
+						isremove: false
+					},
+					{
+						user_id: 1,
+						avatar: '/static/images/avatar/134.jpg',
+						nickname: '昵称',
+						data: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈',
+						type: "text",
+						createtime: '1599620791',
+						isremove: false
+					},
+					{
+						user_id: 1,
+						avatar: '/static/images/avatar/134.jpg',
+						nickname: '昵称',
+						data: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈',
+						type: "text",
+						createtime: '1599621791',
+						isremove: false
+					},
+					{
+						user_id: 1,
+						avatar: '/static/images/avatar/134.jpg',
+						nickname: '昵称',
+						data: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈',
+						type: "text",
+						createtime: '1599622791',
+						isremove: false
+					}
+				]
+			}
+		},
+		methods: {
+			// 长按气泡
+			chickLong(e) {
+				const {
+					x,
+					y,
+					index
+				} = e
+				// console.log(e)
+				this.propIndex = index
+				this.$refs.extend.show(x, y)
+			},
+			clickEvent(func) {
+				switch (func) {
+					case 'removeChatItem':
+						// 消息撤回
+						this.list[this.propIndex].isremove = true
+						break;
+				}
+				this.$refs.extend.hidden()
+			},
+			// 空出导航栏高度
+			navBarPla() {
+				var statusBarHeight = 0
+				// #ifdef APP-PLUS-NVUE
+				statusBarHeight = plus.navigator.getStatusbarHeight()
+				// #endif
+				this.navBarHeight = statusBarHeight + uni.upx2px(90) // 90rpx高度转为px
+			}
+		},
+		mounted() {
+			this.navBarPla()
+			// 监听键盘高度变化
+			uni.onKeyboardHeightChange(res => {
+				this.KeyboardHeight = res.height;
+			})
+		},
+		computed: {
+			scrollStyle() {
+				return `bottom: ${uni.upx2px(90)+this.KeyboardHeight}px;top: ${this.navBarHeight}px;`
+			},
+			menuHeight() {
+				return this.menus.length * 100
+			},
+			menuStyle() {
+				return `width:240rpx;height:${this.menuHeight}rpx;`
+			},
+			// 判断是否为本人，只能撤回自己的
+			isDoSelf() {
+				let id = 1
+				let user_id = this.propIndex > -1 ? this.list[this.propIndex].user_id : 0
+				return user_id === id
+			},
+			getMenus() {
+				return this.menus.filter(v => {
+					if (v.name === "撤回" && !this.isDoSelf) return false
+					return true
+				})
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.popup-content {
+		display: flex;
+		flex-direction: column;
+
+		view {
+			flex: 1;
+			display: flex;
+			justify-content: center;
+			border-bottom: 1px solid #eeeeee;
+		}
+
+		view:last-child {
+			border-bottom: none;
+		}
+	}
+</style>

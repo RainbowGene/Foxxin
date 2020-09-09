@@ -1,22 +1,70 @@
 <template>
 	<view>
-		
+		<free-nav-bar :title="title"></free-nav-bar>
+		<free-list-item v-for="(item,index) in maillist" :key="index" :cover="item.cover" :title="item.title"></free-list-item>
+		<block v-for="(item,index) in mocklist" :key="index">
+			<view v-if="item.data.length">
+				<view class="py-2 px-3 border-bottom bg-light">
+					<text class="font-sm text-dark">{{item.latter}}</text>
+				</view>
+				<free-list-item v-for="(item2,index2) in item.data" :key="index2" cover="../../../static/images/avatar/5.jpg"
+				 :title="item2"></free-list-item>
+			</view>
+		</block>
 	</view>
 </template>
 
 <script>
+	import freeNavBar from "../../../components/free-ui/free-nav-bar.vue"
+	import freeListItem from "../../../components/free-ui/free-list-item.vue"
 	export default {
+		components: {
+			freeNavBar,
+			freeListItem
+		},
 		data() {
 			return {
-				
+				title: '通讯录',
+				maillist: [{
+						cover: '../../../static/images/mail/group.png',
+						title: '群聊',
+						event: "aa"
+					},
+					{
+						cover: '../../../static/images/mail/friend.png',
+						title: '新的朋友',
+						event: "aa"
+					},
+					{
+						cover: '../../../static/images/mail/tag.png',
+						title: '标签',
+						event: "aa"
+					}
+				],
+				mocklist: [{
+						latter: 'A',
+						data: [
+							'阿松', '阿猫'
+						]
+					},
+					{
+						latter: 'B',
+						data: [
+							'宝贝', '宝哥'
+						]
+					},
+					{
+						latter: 'C',
+						data: []
+					}
+				]
 			}
 		},
 		methods: {
-			
+
 		}
 	}
 </script>
 
-<style>
-
+<style lang="scss" scoped>
 </style>
