@@ -8,9 +8,15 @@
 		 :style="scrollStyle">
 			<!-- 内容列表组件 -->
 			<block v-for="(item,index) in list" :key="index">
-				<free-chat-item ref="chatItem" :item="item" :index="index" :pretime="index>0?list[index-1].createtime:0" @clickLong="chickLong"></free-chat-item>
+				<free-chat-item ref="chatItem" :item="item" :index="index" :pretime="index>0?list[index-1].createtime:0" @clickLong="chickLong"
+				 @preview="previewImg"></free-chat-item>
 			</block>
 		</scroll-view>
+
+		<!-- 这个div的方法：点击以上的部分页面，可以收起键盘
+			nvue 渲染从上到下渲染-->
+		<div v-show="mode==='action'|| mode === 'emoticon'" class="position-fixed top-0 right-0 left-0 bottom-0" @click="clickPage"></div>
+
 		<!-- 气泡弹出层 -->
 		<free-popup ref="extend" :bodyW="240" :bodyH="menuHeight" :tabHeight="90">
 			<view class="popup-content" :style='menuStyle'>
@@ -24,24 +30,24 @@
 			<free-icon-btn>&#xe60f;</free-icon-btn>
 			<view class="flex-1">
 				<textarea fixed :adjust-position="false" class="rounded bg-white font-md" style="height:60rpx;width: 100%;line-height: 60rpx;"
-				 v-model="text"></textarea>
+				 v-model="text" @focus="txtFocus"></textarea>
 			</view>
-			<free-icon-btn>&#xe657;</free-icon-btn>
-			<free-icon-btn v-if="!sendBtnShow" @click="openAction">&#xe60d;</free-icon-btn>
+			<free-icon-btn @click="openAction('emoticon')">&#xe657;</free-icon-btn>
+			<free-icon-btn v-if="!sendBtnShow" @click="openAction('action')">&#xe60d;</free-icon-btn>
 			<!-- 发送按钮 -->
 			<view v-if="sendBtnShow" @click="sendMsg('text')" hover-class="bg-chat-item" class="main-bg-color rounded mr-2">
 				<text class="font-md text-white px-2 py-1">发送</text>
 			</view>
 		</view>
-
-		<!-- 拓展菜单 弹出层 -->
-		<free-popup ref="action" Bottom @hide="KeyboardHeight=0">
-			<view class="border-top" style="height: 550rpx;">
-				<swiper :indicator-dots="true" style="height: 510rpx;">
-					<swiper-item class="swiper-item row">
-						<view class="col-3">1</view>
-						<view class="col-3">2</view>
-						<view class="col-3">3</view>
+		<!-- 拓展菜单 弹出层 不开启蒙版 -->
+		<free-popup ref="action" Bottom @hide="KeyboardHeight=0" :mask="false">
+			<view class="border-top bg-light" style="height: 550rpx;">
+				<swiper :indicator-dots="emoticonOrActionList.length>1?true:false" style="height: 540rpx;">
+					<swiper-item v-for="(items,index) in emoticonOrActionList" :key="index" class="swiper-item flex flex-row flex-wrap">
+						<view v-for="(item,i) in items" :key="i" class="col-3 flex flex-column align-center justify-center" @click="actionEvent(item)">
+							<image :src="item.icon" mode="widthFix"></image>
+							<text class="font text-light-muted mt-2">{{item.name}}</text>
+						</view>
 					</swiper-item>
 				</swiper>
 			</view>
@@ -65,6 +71,7 @@
 		},
 		data() {
 			return {
+				mode: 'text', // 默认是输入文字模式text / audio / emoticon / action
 				text: '', // 输入文字
 				slideBottom: 10000, // scrollview 默认滑动距离
 				KeyboardHeight: 0, // 软键盘高度
@@ -102,6 +109,50 @@
 						name: '撤回',
 						event: 'removeChatItem'
 					}
+				],
+				emoticonlist: [],
+				actionlist: [ // 拓展菜单列表
+					[{
+							icon: '/static/images/extends/pic.png',
+							name: '图片',
+							event: 'uploadImg'
+						},
+						{
+							icon: '/static/images/extends/video.png',
+							name: '拍摄',
+							event: ''
+						},
+						{
+							icon: '/static/images/extends/phone.png',
+							name: '语音通话',
+							event: ''
+						},
+						{
+							icon: '/static/images/extends/path.png',
+							name: '位置',
+							event: ''
+						},
+						{
+							icon: '/static/images/extends/hongbao.png',
+							name: '红包',
+							event: ''
+						},
+						{
+							icon: '/static/images/extends/audio.png',
+							name: '语音输入',
+							event: ''
+						},
+						{
+							icon: '/static/images/extends/shoucan.png',
+							name: '我的收藏',
+							event: ''
+						},
+						{
+							icon: '/static/images/extends/man.png',
+							name: '名片',
+							event: ''
+						}
+					]
 				],
 				list: [{
 						user_id: 2,
@@ -151,7 +202,30 @@
 				]
 			}
 		},
+		created() {
+			this.__init()
+		},
 		methods: {
+			// 初始化
+			__init() { // 生成表情包数组
+				let total = 20 // 假设总条数为20
+				let page = Math.ceil(total / 8)
+				var arr = []
+				for (let i = 0; i < page; i++) {
+					let start = i * 8
+					arr[i] = []
+					for (let j = 0; j < 8; j++) {
+						var index = start + j
+						if ((index + 1) > total) continue;
+						arr[i].push({
+							name: '表情' + index,
+							icon: '/static/images/emoticon/' + index + '.gif',
+							event: 'emoticon'
+						})
+					}
+				}
+				this.emoticonlist = arr
+			},
 			// 长按气泡
 			chickLong(e) {
 				const {
@@ -194,7 +268,7 @@
 			// 右上角更多按钮
 			btnMore() {},
 			// 发送消息
-			async sendMsg(type) {
+			async sendMsg(type, data = '') {
 				let time = (new Date()).getTime()
 				let obj = {
 					user_id: 1,
@@ -212,7 +286,9 @@
 						break;
 					case 'video':
 						break;
-					case 'img':
+					default:
+						obj.type = type
+						obj.data = data
 						break;
 				}
 				await this.list.push(obj)
@@ -220,17 +296,69 @@
 				this.scrollToBottom()
 			},
 			// 打开底部拓展菜单
-			openAction() {
+			openAction(type) {
+				this.mode = type // 模式切换
+				// 收起键盘
+				uni.hideKeyboard()
 				this.$refs.action.show()
 				this.KeyboardHeight = uni.upx2px(550)
 				this.scrollToBottom()
+			},
+			// 拓展菜单点击事件
+			actionEvent(e) {
+				switch (e.event) {
+					case 'uploadImg': // 发送图片
+						uni.chooseImage({
+							count: 9,
+							success: (res) => {
+								// 发送到服务器
+								// 渲染页面
+								res.tempFilePaths.forEach(item => {
+									this.sendMsg('img', item) // 当做表情包处理
+								})
+							}
+						})
+						break;
+					case 'emoticon':
+						this.sendMsg('emoticon', e.icon)
+						break;
+				}
+			},
+			// 输入框聚焦事件
+			txtFocus() {
+				this.mode = 'text' // 模式切换为text 适应键盘
+			},
+			// 收起键盘
+			clickPage() {
+				this.mode = ''
+			},
+			// 预览本页图片
+			previewImg(path) {
+				console.log(path)
+				uni.previewImage({
+					current: path,
+					urls: this.imgList,
+					indicator:"default"
+				})
+			}
+		},
+		watch: {
+			mode(newVal, oldVal) {
+				if (newVal !== "action" && newVal !== "emoticon") { // 模式不为拓展菜单，隐藏菜单
+					this.$refs.action.hidden()
+				}
+				if (newVal !== 'text') {
+					uni.hideKeyboard() // 收起键盘
+				}
 			}
 		},
 		mounted() {
 			this.navBarPla()
 			// 监听键盘高度变化
 			uni.onKeyboardHeightChange(res => {
-				this.KeyboardHeight = res.height;
+				if (this.mode !== 'action' && this.mode !== 'emoticon') {
+					this.KeyboardHeight = res.height;
+				}
 			})
 			this.scrollToBottom()
 		},
@@ -258,6 +386,20 @@
 			},
 			sendBtnShow() {
 				return this.text !== '' ? true : false
+			},
+			// 获取操作或者表情列表
+			emoticonOrActionList() {
+				return (this.mode === 'emoticon' || this.mode === "action") ? this[this.mode + 'list'] : []
+			},
+			// 所有图片地址，提供预览
+			imgList() {
+				let arr = []
+				this.list.forEach(item => {
+					if (item.type === 'img') {
+						arr.push(item.data)
+					}
+				})
+				return arr
 			}
 		}
 	}
@@ -287,7 +429,12 @@
 	.swiper-item {
 		view {
 			height: 255rpx;
-			border: 1px solid #eeeeee;
+			// border: 1px solid #eeeeee;
+
+			image {
+				width: 100rpx;
+				height: 100rpx;
+			}
 		}
 	}
 </style>

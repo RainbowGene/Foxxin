@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view class="pb-2">
 		<!-- 时间显示 -->
 		<view v-if="showTime" class="flex align-center justify-center mt-1 py-2">
 			<text class="font-sm text-light-muted">{{showTime}}</text>
@@ -9,14 +9,18 @@
 			<text class="font-sm text-light-muted">你撤回了一条消息</text>
 		</view>
 		<!-- 主体内容 -->
-		<view v-if="!item.isremove" class="flex pt-3 position-relative" :class="isSelf?'flex-row-reverse':'flex-row'">
+		<view v-if="!item.isremove" class="flex pt-1 position-relative" :class="isSelf?'flex-row-reverse':'flex-row'">
 			<view>
 				<free-avatar :src="item.avatar" :size="100"></free-avatar>
 			</view>
-			<text class="iconfont position-absolute font-lg" :class="isSelf?'text-chat-item chat-right-icon':'chat-left-icon text-white'">{{isSelf?'&#xe61c;':'&#xe6a7;'}}</text>
+			<text v-if="item.type!=='emoticon'&&item.type!=='img'" class="iconfont position-absolute font-lg" :class="isSelf?'text-chat-item chat-right-icon':'chat-left-icon text-white'">{{isSelf?'&#xe61c;':'&#xe6a7;'}}</text>
 			<!-- 长按弹出操作菜单 -->
-			<div @longpress="longClick" style="height: 100%;" class="rounded px-2 py-1" :class="isSelf?'mr-3 bg-chat-item':'ml-3 bg-white'">
-				<text class="font-md">{{item.data}}</text>
+			<div @longpress="longClick" style="height: 100%;" class="rounded px-2 py-1" :class="labelClass">
+				<!-- 文字 -->
+				<text v-if="item.type==='text'" class=" font-md">{{item.data}}</text>
+				<!-- 表情 -->
+				<image v-else-if="item.type==='emoticon' || item.type==='img' " style="height: 330rpx;width: 330rpx;" :src="item.data"
+				 mode="widthFix" @click="preview(item)" lazy-load></image>
 			</div>
 		</view>
 	</view>
@@ -43,6 +47,14 @@
 			showTime() {
 				// 间隔超过300秒不要显示了
 				return $time.getChatTime(this.item.createtime, this.pretime)
+			},
+			// 气泡是否显示
+			labelClass() {
+				if (this.item.type === 'emoticon' || this.item.type === 'img') {
+					return this.isSelf ? 'mr-3' : 'ml-3'
+				}
+				// 如果是音频或者文字需要气泡
+				return this.isSelf ? 'mr-3 bg-chat-item' : 'ml-3 bg-white'
 			}
 		},
 		methods: {
@@ -71,6 +83,12 @@
 					y,
 					index: this.index
 				})
+			},
+			// 图片预览
+			preview(item) {
+				if(item.type !== 'img') return;
+				// 确认图片，可以预览
+				this.$emit('preview',this.item.data) // 这里传过去的是路径
 			}
 		}
 	}
