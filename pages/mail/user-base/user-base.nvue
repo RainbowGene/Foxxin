@@ -1,0 +1,129 @@
+<template>
+	<view class="page">
+		<freeNavBar showBack bgColor="bg-white">
+			<free-icon-btn slot="right" @click="openAction">&#xe615;</free-icon-btn>
+		</freeNavBar>
+		<!-- 基本信息栏 -->
+		<view class="py-4 px-3 flex flex-row align-center bg-white border-bottom">
+			<free-avatar src="/static/images/avatar/134.jpg" size="130"></free-avatar>
+			<view class="flex flex-column ml-3">
+				<!-- 备注名不存在使用昵称 -->
+				<text class="font-lg font-weight-bold mb-1">{{nickname?nickname:'Gene'}}</text>
+				<text class="font-sm text-light-muted">Fox号：1767386755</text>
+				<text class="font-sm text-light-muted">地区：广东深圳</text>
+			</view>
+		</view>
+
+		<free-list-item :showLeftIcon="false" @click="navigate('mail/user-remark-tag/user-remark-tag')">
+			<view class="flex flex-row flex-wrap align-center">
+				<text class="font-md text-dark mr-2">标签</text>
+				<!-- 最多显示5个 -->
+				<text v-show="index<5" class="font-md text-light-muted mr-1" v-for="(item,index) in taglist" :key="index">{{item}}</text>
+				<text v-if="taglist.length<1" class="font-md text-light-muted mr-1">未设置</text>
+			</view>
+		</free-list-item>
+		<free-divider></free-divider>
+		<free-list-item :showLeftIcon="false">
+			<view class="flex flex-row align-center">
+				<text class="font-md text-dark mr-2">朋友圈</text>
+				<image class="mr-2" src="../../../static/images/emoticon/14.gif" style="width: 60rpx;height: 60rpx;"></image>
+				<image class="mr-2" src="../../../static/images/emoticon/15.gif" style="width: 60rpx;height: 60rpx;"></image>
+			</view>
+		</free-list-item>
+		<free-list-item title="更多信息" :showLeftIcon="false"></free-list-item>
+		<free-divider></free-divider>
+
+		<view class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light">
+			<text class="font-md text-primary iconfont">&#xe60a;</text>
+			<text class="font-md text-primary ml-1">发信息</text>
+		</view>
+
+		<!-- 拓展菜单 -->
+		<free-popup ref="action" Bottom maskColor>
+			<scroll-view scroll-y class="bg-white" style="height: 630rpx;" :show-scrollbar="false">
+				<block v-for="(item,index) in actions" :key="index">
+					<free-list-item :title="item.title" :border="false" @click="openMoments">
+						<text slot="icon" class="iconfont font-lg py-1" v-html="item.icon"></text>
+					</free-list-item>
+				</block>
+			</scroll-view>
+		</free-popup>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeAvatar from "@/components/free-ui/free-avatar.vue"
+	import freeDivider from "@/components/free-ui/free-divider.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import freeIconBtn from "@/components/free-ui/free-icon-btn.vue"
+	import freePopup from "@/components/free-ui/free-popup.vue"
+	export default {
+		components: {
+			freeNavBar,
+			freeAvatar,
+			freeDivider,
+			freeListItem,
+			freeIconBtn,
+			freePopup
+		},
+		data() {
+			return {
+				nickname:'', // 备注名
+				taglist: [],
+				actions: [{
+						title: '设置备注和标签',
+						icon: '&#xe6b7;'
+					},
+					{
+						title: '把他推荐给朋友',
+						icon: '&#xe63d;'
+					},
+					{
+						title: '设为星标朋友',
+						icon: '&#xe639;'
+					},
+					{
+						title: '设置朋友圈动态和权限',
+						icon: '&#xe6a8;'
+					},
+					{
+						title: '加入黑名单',
+						icon: '&#xe62a;'
+					},
+					{
+						title: '投诉',
+						icon: '&#xe63c;'
+					}
+				]
+			}
+		},
+		onLoad() {
+			uni.$on('saveRemark', (info) => {
+				console.log(info)
+				this.taglist = info.taglist
+				this.nickname = info.nickname
+			})
+		},
+		beforeDestroy() {
+			uni.$off('saveRemark')
+		},
+		methods: {
+			// 更多按钮:弹出操作菜单
+			openAction() {
+				if (this.$refs.action.status) return this.$refs.action.hidden()
+				this.$refs.action.show()
+			},
+			// 跳转
+			navigate(path) {
+				uni.navigateTo({
+					url: "/pages/" + path
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

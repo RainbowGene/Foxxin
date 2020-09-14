@@ -1,13 +1,14 @@
 <script>
 	export default {
 		onLaunch: function() {
-			
+			// 加载全局唯一的录音管理器
+			this.$store.commit('initRECORD')
 		},
 		onShow: function() {
-			console.log('App Show')
+			
 		},
 		onHide: function() {
-			console.log('App Hide')
+			
 		}
 	}
 </script>

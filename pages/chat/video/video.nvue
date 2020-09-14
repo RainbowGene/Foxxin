@@ -1,0 +1,44 @@
+<template>
+	<view class="position-relative">
+		<video :src="videoUrl" controls autoplay style="width: 750rpx;" :style="'height:'+windowH+'px'" @ended="back"></video>
+		<view class="flex-row position-absolute justify-between p-4" style="width: 750rpx;height: 80rpx;">
+			<text class="iconfont text-white font-lg" @click="back">&#xe611;</text>
+			<text class="iconfont text-white font-lg">&#xe615;</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				videoUrl: '',
+				windowH: 500
+			}
+		},
+		onLoad(e) {
+			if (e.url === '') {
+				this.back()
+				return uni.showToast({
+					title: "该视频已无法播放",
+					icon: 'none'
+				})
+			}
+			this.videoUrl = e.url
+			// 动态获取高度
+			let res = uni.getSystemInfoSync()
+			this.windowH = res.windowHeight
+		},
+		methods: {
+			back(){
+				uni.navigateBack({
+					delta:1
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

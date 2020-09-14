@@ -1,5 +1,5 @@
 <template>
-	<view class="flex-row align-stretch" hover-class="bg-light" @click="$emit('click')">
+	<view class="flex-row align-stretch bg-white" hover-class="bg-light" @click="$emit('click')">
 		<view class="flex align-center justify-center py-2 pl-3" v-if="showLeftIcon">
 			<slot name="icon"></slot>
 			<image :src="cover" v-if="cover" mode="widthFix" :style="coverStyle"></image>
@@ -65,7 +65,7 @@
 </script>
 
 <style lang="scss" scoped>
-	.border-bottom{
-		border-bottom: 1px solid #eeeeee;
-	}
+	// .border-bottom{
+	// 	border-bottom: 1px solid #eeeeee;
+	// }
 </style>

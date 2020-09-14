@@ -1,0 +1,70 @@
+<template>
+	<view class="page">
+		<freeNavBar title="设置备注和标签" showBack bgColor="bg-light">
+			<free-main-botton slot="right" @click="send" name="完成"></free-main-botton>
+		</freeNavBar>
+
+		<view class="flex flex-column">
+			<text class="font text-secondary px-3 py-1">备注名</text>
+			<input type="text" value="" class="bg-white px-3" style="height: 100rpx;" placeholder="请输入备注名" v-model="nickname" />
+			<text class="font text-secondary px-3 py-1">标签</text>
+			<view class="flex flex-row flex-wrap align-center bg-white px-3 pt-3 pb-2" @click="openTagSet">
+				<view v-for="(item,index) in taglist" :key="index" class="border-main rounded-circle px-2 py-1 mr-1 mb-1">
+					<text class="font main-text-color">{{item}}</text>
+				</view>
+				<text v-if="taglist.length<1" class="font main-text-color mb-1">点击添加</text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeMainBotton from "@/components/free-ui/free-main-button.vue"
+	export default {
+		components: {
+			freeNavBar,
+			freeMainBotton
+		},
+		data() {
+			return {
+				nickname:'',
+				taglist: []
+			}
+		},
+		onLoad() {
+			// 监听标签修改后传回
+			uni.$on('updateTag', (newlist) => {
+				this.taglist = newlist
+			})
+		},
+		// 页面销毁之前，注销监听事件
+		beforeDestroy() {
+			uni.$off('updateTag')
+		},
+		methods: {
+			// 提交修改
+			send() {
+				uni.$emit('saveRemark', {
+					taglist: this.taglist,
+					nickname:this.nickname
+				})
+				uni.navigateBack({
+					delta:1
+				})
+			},
+			// 跳转标签设置页
+			openTagSet() {
+				uni.navigateTo({
+					url: "../user-tag-set/user-tag-set?detail=" + JSON.stringify(this.taglist)
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+	.border-main {
+		border: 1px solid #08C060 !important;
+	}
+</style>

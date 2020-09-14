@@ -13,7 +13,7 @@
 						<slot name="title">{{title}}{{noread|msgNumFilter}}</slot>
 					</text>
 				</view>
-				<view class="top-bar-right">
+				<view v-if="showRight" class="top-bar-right">
 					<slot name="right">
 						<free-icon-btn @click="searchHandle"><text class="iconfont">&#xe636;</text></free-icon-btn>
 						<free-icon-btn @click="addHandle"><text class="iconfont smart">&#xe60d;</text></free-icon-btn>
@@ -90,6 +90,10 @@
 			bgColor: {
 				type: String,
 				default: 'bg-light'
+			},
+			showRight: {
+				type: Boolean,
+				default: true
 			}
 		},
 		components: {

@@ -15,7 +15,7 @@
 
 		<!-- 这个div的方法：点击以上的部分页面，可以收起键盘
 			nvue 渲染从上到下渲染-->
-		<div v-show="mode==='action'|| mode === 'emoticon'" class="position-fixed top-0 right-0 left-0 bottom-0" @click="clickPage"></div>
+		<div v-show="mode==='action' || mode === 'emoticon'" class="position-fixed top-0 right-0 left-0 bottom-0" @click="clickPage"></div>
 
 		<!-- 气泡弹出层 -->
 		<free-popup ref="extend" :bodyW="240" :bodyH="menuHeight" :tabHeight="90">
@@ -27,9 +27,16 @@
 		</free-popup>
 		<!-- 底部输入框 -->
 		<view class="flex flex-row position-fixed right-0 left-0 border-top align-center" style="background: #F7F7F6;" :style="'bottom:'+KeyboardHeight+'px;'">
-			<free-icon-btn>&#xe60f;</free-icon-btn>
+			<free-icon-btn @click="switchBtn()">{{mode==='audio'?'&#xe651;':'&#xe60f;'}}</free-icon-btn>
 			<view class="flex-1">
-				<textarea fixed :adjust-position="false" class="rounded bg-white font-md" style="height:60rpx;width: 100%;line-height: 60rpx;"
+				<!-- 按住输入框 -->
+				<view v-if="mode==='audio'" class="flex align-center justify-center rounded  font-md" style="height:60rpx;width: 100%;line-height: 60rpx;"
+				 :class="isRecording?'bg-hover-light':'bg-white'" @touchstart="voiceTouchStart" @touchend="voiceTouchEnd"
+				 @touchcancel="voiceTouchCancel" @touchmove="voiceTouchMove">
+					<text>{{isRecording?'松开 结束':'按住 说话'}}</text>
+				</view>
+				<!-- 文本输入框 -->
+				<textarea v-if="mode!=='audio'" fixed :adjust-position="false" class="rounded bg-white font-md" style="height:60rpx;width: 100%;line-height: 60rpx;"
 				 v-model="text" @focus="txtFocus"></textarea>
 			</view>
 			<free-icon-btn @click="openAction('emoticon')">&#xe657;</free-icon-btn>
@@ -52,6 +59,14 @@
 				</swiper>
 			</view>
 		</free-popup>
+
+		<!-- 正在录音提示 -->
+		<view v-if="isRecording" class="position-fixed top-0 right-0 left-0 flex align-center justify-center" style="bottom: 95rpx;">
+			<view class="rounded flex flex-column align-center justify-center" style="width: 360rpx;height: 360rpx;background-color: rgba(0,0,0,0.5);">
+				<image src="../../static/audio/recording.gif" style="width: 150rpx;height: 150rpx;"></image>
+				<text class="font text-white mt-3">{{unRecord?'松开手指取消发送':'手指上滑取消发送'}}</text>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -61,6 +76,10 @@
 	import freeAvatar from "@/components/free-ui/free-avatar.vue"
 	import freeChatItem from "@/components/free-ui/free-chat-item.vue"
 	import freePopup from "@/components/free-ui/free-popup.vue"
+	import {
+		mapState,
+		mapMutations
+	} from "vuex"
 	export default {
 		components: {
 			freeNavBar,
@@ -77,6 +96,9 @@
 				KeyboardHeight: 0, // 软键盘高度
 				navBarHeight: 0,
 				propIndex: -1, // 当前操作的气泡索引
+				isRecording: false, // 是否处于录制
+				RecordingStartY: 0, // 按下时的位置
+				unRecord: false, // 是否取消录音
 				menus: [{
 						name: '复制',
 						event: ''
@@ -120,7 +142,7 @@
 						{
 							icon: '/static/images/extends/video.png',
 							name: '拍摄',
-							event: ''
+							event: 'uploadVideo'
 						},
 						{
 							icon: '/static/images/extends/phone.png',
@@ -176,26 +198,35 @@
 						user_id: 1,
 						avatar: '/static/images/avatar/134.jpg',
 						nickname: '昵称',
-						data: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈',
-						type: "text",
-						createtime: '1599620791',
+						data: '/static/audio/1.mp3', // 音频播放地址
+						type: "audio",
+						options: {
+							time: 6 // 音频时长
+						},
+						createtime: '1599622791',
+						isremove: false
+					},
+					{
+						user_id: 2,
+						avatar: '/static/images/avatar/134.jpg',
+						nickname: '昵称',
+						data: '/static/audio/3.mp3', // 音频播放地址
+						type: "audio",
+						options: {
+							time: 40
+						},
+						createtime: '1599622791',
 						isremove: false
 					},
 					{
 						user_id: 1,
 						avatar: '/static/images/avatar/134.jpg',
 						nickname: '昵称',
-						data: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈',
-						type: "text",
-						createtime: '1599621791',
-						isremove: false
-					},
-					{
-						user_id: 1,
-						avatar: '/static/images/avatar/134.jpg',
-						nickname: '昵称',
-						data: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈',
-						type: "text",
+						data: '/static/video/demo.mp4', // 视频播放地址
+						options: {
+							poster: '/static/video/demo.jpg' // 视频封面
+						}, // 视频封面
+						type: "video",
 						createtime: '1599622791',
 						isremove: false
 					}
@@ -206,6 +237,7 @@
 			this.__init()
 		},
 		methods: {
+			...mapMutations(['regSendVoiceEvent']),
 			// 初始化
 			__init() { // 生成表情包数组
 				let total = 20 // 假设总条数为20
@@ -263,28 +295,40 @@
 					dom.scrollToElement(items[lastIndex], {})
 				}
 				// #endif
+				// #ifdef H5
 				this.slideBottom += 500
+				// #endif
 			},
 			// 右上角更多按钮
-			btnMore() {},
+			btnMore() {
+				// 进入设置页
+				uni.navigateTo({
+					url:"./chat-set/chat-set"
+				})
+			},
 			// 发送消息
-			async sendMsg(type, data = '') {
+			async sendMsg(type, data = '', options = {}) {
 				let time = (new Date()).getTime()
 				let obj = {
 					user_id: 1,
 					avatar: '/static/images/avatar/134.jpg',
 					nickname: '昵称',
 					createtime: time,
-					isremove: false
+					isremove: false,
+					options: options
 				}
+				console.log(obj)
 				switch (type) {
 					case 'text':
 						obj.type = type
 						obj.data = this.text
 						break;
 					case 'audio':
+						obj.data = data
 						break;
 					case 'video':
+						obj.type = type
+						obj.data = data
 						break;
 					default:
 						obj.type = type
@@ -293,7 +337,9 @@
 				}
 				await this.list.push(obj)
 				this.text = ''
-				this.scrollToBottom()
+				setTimeout(() => {
+					this.scrollToBottom()
+				}, 200)
 			},
 			// 打开底部拓展菜单
 			openAction(type) {
@@ -322,6 +368,17 @@
 					case 'emoticon':
 						this.sendMsg('emoticon', e.icon)
 						break;
+					case 'uploadVideo': // 发送视频
+						uni.chooseVideo({
+							maxDuration: 10,
+							success: (res) => {
+								// 发送到服务器(获取封面,返回封面及视频url)
+								// 渲染页面
+								console.log(e)
+								this.sendMsg('video', res.tempFilePath)
+							}
+						})
+						break;
 				}
 			},
 			// 输入框聚焦事件
@@ -334,17 +391,55 @@
 			},
 			// 预览本页图片
 			previewImg(path) {
-				console.log(path)
 				uni.previewImage({
 					current: path,
 					urls: this.imgList,
-					indicator:"default"
+					indicator: "default"
 				})
+			},
+			// 切换音频输入按钮
+			switchBtn() {
+				this.mode = this.mode !== 'audio' ? 'audio' : 'text'
+			},
+			// 手指按下
+			voiceTouchStart(e) {
+				this.isRecording = true
+				this.unRecord = false
+				// #ifdef H5
+				this.RecordingStartY = e.changedTouches[0].clientY
+				// #endif
+				// #ifdef APP-PLUS-NVUE
+				this.RecordingStartY = e.changedTouches[0].screenY
+				// #endif
+				this.RECORD.start({
+					format: 'mp3'
+				})
+			},
+			// 手指抬起
+			voiceTouchEnd() {
+				this.isRecording = false
+				this.RECORD.stop()
+			},
+			// 被打断(来电等)
+			voiceTouchCancel() {
+				this.isRecording = false
+				this.unRecord = true
+				this.RECORD.stop()
+			},
+			// 手指移动一定距离
+			voiceTouchMove(e) {
+				// #ifdef APP-PLUS-NVUE
+				let Y = Math.abs(e.changedTouches[0].screenY - this.RecordingStartY)
+				// #endif
+				// #ifdef H5
+				let Y = Math.abs(e.changedTouches[0].clientY - this.RecordingStartY)
+				// #endif
+				this.unRecord = (Y >= 50)
 			}
 		},
 		watch: {
 			mode(newVal, oldVal) {
-				if (newVal !== "action" && newVal !== "emoticon") { // 模式不为拓展菜单，隐藏菜单
+				if (newVal !== "action" && newVal !== "emoticon" && newVal !== "audio") { // 模式不为拓展菜单，隐藏菜单
 					this.$refs.action.hidden()
 				}
 				if (newVal !== 'text') {
@@ -361,8 +456,20 @@
 				}
 			})
 			this.scrollToBottom()
+			// 开启录音监听: 注册发送音频的事件
+			this.regSendVoiceEvent((url) => {
+				if (!this.unRecord) {
+					this.sendMsg('audio', url, {
+						time: this.RecordTime
+					})
+				}
+			})
 		},
 		computed: {
+			...mapState({
+				RECORD: state => state.audio.RECORD,
+				RecordTime: state => state.audio.RecordTime
+			}),
 			scrollStyle() {
 				return `bottom: ${uni.upx2px(90)+this.KeyboardHeight}px;top: ${this.navBarHeight}px;`
 			},

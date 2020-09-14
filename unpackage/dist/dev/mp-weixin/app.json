@@ -1,0 +1,50 @@
+{
+  "pages": [
+    "pages/tabbar/index/index",
+    "pages/tabbar/mail/mail",
+    "pages/tabbar/find/find",
+    "pages/tabbar/my/my",
+    "pages/chat/chat",
+    "pages/chat/video/video"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "Foxxin",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "borderStyle": "black",
+    "backgroundColor": "#F7F7F7",
+    "color": "#000000",
+    "selectedColor": "#08C261",
+    "list": [
+      {
+        "iconPath": "static/tabbarIcon/index.png",
+        "selectedIconPath": "static/tabbarIcon/index-select.png",
+        "text": "首页",
+        "pagePath": "pages/tabbar/index/index"
+      },
+      {
+        "iconPath": "static/tabbarIcon/mail.png",
+        "selectedIconPath": "static/tabbarIcon/mail-select.png",
+        "text": "通讯录",
+        "pagePath": "pages/tabbar/mail/mail"
+      },
+      {
+        "iconPath": "static/tabbarIcon/find.png",
+        "selectedIconPath": "static/tabbarIcon/find-select.png",
+        "text": "发现",
+        "pagePath": "pages/tabbar/find/find"
+      },
+      {
+        "iconPath": "static/tabbarIcon/my.png",
+        "selectedIconPath": "static/tabbarIcon/my-select.png",
+        "text": "我的",
+        "pagePath": "pages/tabbar/my/my"
+      }
+    ]
+  },
+  "usingComponents": {}
+}

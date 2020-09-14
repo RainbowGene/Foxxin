@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "free-nav-bar": "/components/free-ui/free-nav-bar",
+    "free-icon-btn": "/components/free-ui/free-icon-btn",
+    "free-avatar": "/components/free-ui/free-avatar",
+    "free-popup": "/components/free-ui/free-popup",
+    "free-chat-item": "/components/free-ui/free-chat-item"
+  }
+}

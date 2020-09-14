@@ -28,8 +28,8 @@
 	/* #ifndef H5 */
 	display: flex!important;
 	/* #endif */
-	flex-wrap: wrap;
-	flex-direction: row;
+	flex-wrap: wrap!important;
+	flex-direction: row!important;
 }
 
 .col-1,
@@ -177,7 +177,7 @@
 }
 
 .flex-wrap {
-	flex-wrap: wrap;
+	flex-wrap: wrap!important;
 }
 
 .flex-nowrap {
@@ -1073,7 +1073,7 @@
 }
 
 .bg-white {
-	background-color: #ffffff!important;
+	background-color: #ffffff;
 }
 
 .bg-transparent {

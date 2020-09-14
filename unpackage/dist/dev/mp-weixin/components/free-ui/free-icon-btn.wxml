@@ -1,0 +1,1 @@
+<view class="icon-btn-box flex-row align-center justify-center data-v-6d2e0eb8" hover-class="bg-hover-light" data-event-opts="{{[['tap',[['$emit',['click']]]]]}}" bindtap="__e"><text class="iconfont font-lg data-v-6d2e0eb8"><slot></slot></text></view>

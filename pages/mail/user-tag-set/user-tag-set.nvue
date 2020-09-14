@@ -1,0 +1,90 @@
+<template>
+	<view class="page">
+		<freeNavBar title="添加标签" showBack bgColor="bg-light">
+			<free-main-botton slot="right" @click="save" name="保存"></free-main-botton>
+		</freeNavBar>
+
+		<view class="px-3 pt-3 pb-2 border-bottom flex flex-row flex-wrap align-center">
+			<view v-for="(item,index) in list" :key="index" class="border border-main rounded-circle py-1 px-2 mb-1 flex flex-row align-center justify-center mr-1"
+			 @click="deltag(index)">
+				<text class="font main-text-color">{{item}}</text>
+			</view>
+			<!-- 待添加的标签 -->
+			<input type="text" class="border bg-white font rounded-circle text-center mb-2 mt-1 mr-1" placeholder="添加标签" style="border-style:dashed;width: 180rpx;height: 60rpx;"
+			 v-model="tag" @confirm="addTag" confirm-type="send" />
+			<free-main-botton class="mb-1" name="添加" @click="addTag"></free-main-botton>
+		</view>
+
+		<!-- 快捷标签 -->
+		<text class="font text-secondary px-3 pt-2">快速添加</text>
+		<view class="flex flex-row flex-wrap align-center px-3 pt-3 pb-2">
+			<view v-for="(item,index) in fastTags" :key="index" class="rounded-circle px-2 bg-white mr-1 mb-1" @click="fastAddTag(item)">
+				<text class="font text-dark">{{item}}</text>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeMainBotton from "@/components/free-ui/free-main-button.vue"
+	export default {
+		components: {
+			freeNavBar,
+			freeMainBotton
+		},
+		data() {
+			return {
+				tag: '',
+				list: [],
+				fastTags: ['hah', '^_^', '双鱼', '起飞','白羊座', '小仙女', '彩虹']
+			}
+		},
+		onLoad(e) {
+			// 接收传来的tag列表
+			this.list = JSON.parse(e.detail)
+		},
+		methods: {
+			// 添加标签
+			addTag() {
+				if (this.list.indexOf(this.tag) !== -1 || this.tag.replace(/(^\s*)|(\s*$)/g, "") === '') {
+					uni.showToast({
+						title: '标签无效或已存在',
+						icon: "none"
+					})
+					return this.tag = ''
+				}
+				this.list.push(this.tag)
+				this.tag = ''
+			},
+			// 点击标签快速添加
+			fastAddTag(item) {
+				this.tag = item
+				this.addTag()
+			},
+			// 删除标签
+			deltag(index) {
+				uni.showModal({
+					content: '移除该标签？',
+					success: (res) => {
+						if(res.cancel) return;
+						this.list.splice(index, 1)
+					}
+				})
+			},
+			// 提交保存
+			save(){
+				uni.$emit('updateTag',this.list)
+				uni.navigateBack({
+					delta:1
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+	.border-main {
+		border: 1px solid #08C060 !important;
+	}
+</style>
