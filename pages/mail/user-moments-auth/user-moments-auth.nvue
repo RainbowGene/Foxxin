@@ -1,0 +1,34 @@
+<template>
+	<view class="page">
+		<freeNavBar title="设置朋友圈和权限" showBack :showRight="false"></freeNavBar>
+		<free-list-item title="不让他看我" :showLeftIcon="false" :border="false" showRight :showRightIcon="false">
+			<switch slot="right" checked="true" color="#08C060" />
+		</free-list-item>
+		<free-list-item title="不看他" :showLeftIcon="false" :border="false" showRight :showRightIcon="false">
+			<switch slot="right" checked="true" color="#08C060" />
+		</free-list-item>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	export default {
+		components: {
+			freeNavBar,
+			freeListItem
+		},
+		data() {
+			return {
+
+			}
+		},
+		methods: {
+
+		}
+	}
+</script>
+
+<style>
+
+</style>

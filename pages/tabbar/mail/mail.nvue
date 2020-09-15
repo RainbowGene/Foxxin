@@ -1,22 +1,33 @@
 <template>
 	<view>
 		<free-nav-bar :title="title"></free-nav-bar>
-		<free-list-item v-for="(item,index) in maillist" :key="index" :cover="item.cover" :title="item.title"></free-list-item>
-		<block v-for="(item,index) in mocklist" :key="index">
-			<view v-if="item.data.length">
-				<view class="py-2 px-3 border-bottom bg-light">
-					<text class="font-sm text-dark">{{item.latter}}</text>
+		<!-- 通讯录列表 -->
+		<scroll-view scroll-y="true" :style="'height:'+scrollHeight+ 'px;'" :scroll-into-view="scrollInto">
+			<free-list-item v-for="(item,index) in maillist" :key="index" :cover="item.cover" :title="item.title"></free-list-item>
+
+			<block v-for="(item,i) in mocklist" :key="i">
+				<view :id="'item-'+item.latter">
+					<view v-if="item.data.length" class="py-2 px-3 border-bottom bg-light">
+						<text class="font-sm text-dark">{{item.latter}}</text>
+					</view>
+					<free-list-item v-for="(item2,index2) in item.data" :key="index2" cover="/static/images/avatar/5.jpg" :title="item2"></free-list-item>
 				</view>
-				<free-list-item v-for="(item2,index2) in item.data" :key="index2" cover="../../../static/images/avatar/5.jpg"
-				 :title="item2"></free-list-item>
+			</block>
+		</scroll-view>
+
+		<!-- 侧边导航条 -->
+		<view class="flex flex-column position-fixed right-0 bg-light" :style="'top:'+topHeight+'px;bottom:50px;'" style="width: 40rpx;"
+		 @touchstart="touchstart" @touchmove="touchmove" @touchend="touchend">
+			<view v-for="(item,index) in mocklist" :key="index" class="flex-1 flex-row align-center justify-center">
+				<text class="font-sm">{{item.latter}}</text>
 			</view>
-		</block>
+		</view>
 	</view>
 </template>
 
 <script>
-	import freeNavBar from "../../../components/free-ui/free-nav-bar.vue"
-	import freeListItem from "../../../components/free-ui/free-list-item.vue"
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
 	export default {
 		components: {
 			freeNavBar,
@@ -24,6 +35,9 @@
 		},
 		data() {
 			return {
+				topHeight: 0,
+				scrollHeight: 0, // 内容高度
+				scrollInto: '',
 				title: '通讯录',
 				maillist: [{
 						cover: '../../../static/images/mail/group.png',
@@ -55,13 +69,64 @@
 					},
 					{
 						latter: 'C',
-						data: []
+						data: ['China', 'Canada', 'Caaa']
+					},
+					{
+						latter: 'D',
+						data: ['大头', '但丁', '哒哒']
+					},
+					{
+						latter: 'E',
+						data: ['大头', '但丁', '哒哒']
+					},
+					{
+						latter: 'F',
+						data: ['大头', '但丁', '哒哒']
+					},
+					{
+						latter: 'G',
+						data: ['大头', '但丁', '哒哒']
+					},
+					{
+						latter: 'H',
+						data: ['大头', '但丁', '哒哒']
 					}
 				]
 			}
 		},
+		onLoad() {
+			let res = uni.getSystemInfoSync()
+			this.topHeight = res.statusBarHeight + uni.upx2px(90)
+			this.scrollHeight = res.windowHeight - this.topHeight
+			this.scrollInto = 'item-D'
+		},
+		computed: {
+			itemHeight() { // 每个索引的高度
+				let count = this.mocklist.length
+				if (count < 1) return 0
+				return this.scrollHeight / count
+			}
+		},
 		methods: {
+			// 触摸开始
+			touchstart(e) {
+				let Y = e.changedTouches[0].clientY
+				let index = Math.floor((Y - this.topHeight) / this.itemHeight)
+				// let index = Math.floor(Y / this.itemHeight)
+				let item = this.mocklist[index]
+				if (item) {
+					this.scrollInto = 'item-' + item.latter
+					console.log(this.scrollInto)
+				}
+			},
+			// 触摸移动
+			touchmove(e) {
 
+			},
+			// 触摸结束
+			touchend(e) {
+
+			}
 		}
 	}
 </script>

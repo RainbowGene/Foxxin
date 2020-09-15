@@ -65,7 +65,4 @@
 </script>
 
 <style lang="scss" scoped>
-	// .border-bottom{
-	// 	border-bottom: 1px solid #eeeeee;
-	// }
 </style>

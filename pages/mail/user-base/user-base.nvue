@@ -6,9 +6,12 @@
 		<!-- 基本信息栏 -->
 		<view class="py-4 px-3 flex flex-row align-center bg-white border-bottom">
 			<free-avatar src="/static/images/avatar/134.jpg" size="130"></free-avatar>
-			<view class="flex flex-column ml-3">
+			<view class="flex flex-column ml-3 flex-1">
 				<!-- 备注名不存在使用昵称 -->
-				<text class="font-lg font-weight-bold mb-1">{{nickname?nickname:'Gene'}}</text>
+				<view class="flex flex-row align-center justify-between">
+					<text class="font-lg font-weight-bold mb-1">{{nickname?nickname:'Gene'}}</text>
+					<text v-if="isStar" style="color:orange;" class="iconfont font-lg ml-1">&#xe639;</text>
+				</view>
 				<text class="font-sm text-light-muted">Fox号：1767386755</text>
 				<text class="font-sm text-light-muted">地区：广东深圳</text>
 			</view>
@@ -34,15 +37,15 @@
 		<free-divider></free-divider>
 
 		<view class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light">
-			<text class="font-md text-primary iconfont">&#xe60a;</text>
-			<text class="font-md text-primary ml-1">发信息</text>
+			<text v-if="!isBlack" class="font-md text-primary iconfont">&#xe60a;</text>
+			<text :class="isBlack?'text-danger':'text-primary'" class="font-md  ml-1">{{isBlack?'移出黑名单':'发信息'}}</text>
 		</view>
 
 		<!-- 拓展菜单 -->
 		<free-popup ref="action" Bottom maskColor>
 			<scroll-view scroll-y class="bg-white" style="height: 630rpx;" :show-scrollbar="false">
 				<block v-for="(item,index) in actions" :key="index">
-					<free-list-item :title="item.title" :border="false" @click="openMoments">
+					<free-list-item :title="item.title" :border="false" @click="popupEvent(item)">
 						<text slot="icon" class="iconfont font-lg py-1" v-html="item.icon"></text>
 					</free-list-item>
 				</block>
@@ -69,11 +72,15 @@
 		},
 		data() {
 			return {
-				nickname:'', // 备注名
+				isStar: false, // 星标
+				isBlack: false, // 黑名单
+				nickname: '', // 备注名
 				taglist: [],
 				actions: [{
 						title: '设置备注和标签',
-						icon: '&#xe6b7;'
+						icon: '&#xe6b7;',
+						type: 'navigate',
+						path: 'mail/user-remark-tag/user-remark-tag'
 					},
 					{
 						title: '把他推荐给朋友',
@@ -81,15 +88,21 @@
 					},
 					{
 						title: '设为星标朋友',
-						icon: '&#xe639;'
+						icon: '&#xe639;',
+						type: 'event',
+						event: 'setStar'
 					},
 					{
 						title: '设置朋友圈动态和权限',
-						icon: '&#xe6a8;'
+						icon: '&#xe6a8;',
+						type: 'navigate',
+						path: 'mail/user-moments-auth/user-moments-auth'
 					},
 					{
 						title: '加入黑名单',
-						icon: '&#xe62a;'
+						icon: '&#xe62a;',
+						type: 'event',
+						event: 'setBlack'
 					},
 					{
 						title: '投诉',
@@ -118,6 +131,42 @@
 			navigate(path) {
 				uni.navigateTo({
 					url: "/pages/" + path
+				})
+			},
+			// 操作菜单事件
+			popupEvent(e) {
+				if (!e.type) return;
+				switch (e.type) {
+					case 'navigate':
+						uni.navigateTo({
+							url: '/pages/' + e.path
+						})
+						break;
+					case 'event':
+						this[e.event](e) // 等同于 this.setStar
+						break;
+				}
+				// 关闭弹出层 app 中可能闪退，使用计时器执行
+				setTimeout(() => {
+					this.$refs.action.hidden()
+				}, 150)
+			},
+			// 设为星标
+			setStar(e) {
+				this.isStar = !this.isStar
+				e.title = this.isStar ? '取消星标' : '设为星标朋友'
+			},
+			// 加入黑名单
+			async setBlack(e) {
+				let text = this.isBlack ? '移出黑名单?' : "加入黑名单?"
+				await uni.showModal({
+					content: text,
+					success: (res) => {
+						if (res.confirm) {
+							this.isBlack = !this.isBlack
+							e.title = this.isBlack ? '移出黑名单' : "加入黑名单"
+						}
+					}
 				})
 			}
 		}

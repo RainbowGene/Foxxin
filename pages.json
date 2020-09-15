@@ -39,6 +39,10 @@
             "path" : "pages/mail/user-tag-set/user-tag-set",
             "style" : {}
         }
+        ,{
+            "path" : "pages/mail/user-moments-auth/user-moments-auth",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
