@@ -43,6 +43,42 @@
             "path" : "pages/mail/user-moments-auth/user-moments-auth",
             "style" : {}
         }
+        ,{
+            "path" : "pages/mail/send-card/send-card",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/mail/user-report/user-report",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/find/moments/moments",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/my/userinfo/userinfo",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/my/cardcode/cardcode",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/my/userfava/userfava",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/compage/search/search",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/find/add-moment/add-moment",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/compage/login/login",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

@@ -1,6 +1,7 @@
 <template>
-	<view @click="$emit('click')" hover-class="bg-chat-item" class="main-bg-color rounded mr-2">
-		<text class="font-md text-white px-2 py-1">{{name}}</text>
+	<view @click="clickEvent" hover-class="bg-chat-item" class="rounded mr-2"
+	:class="disabled?'user-border bg-light':'main-bg-color'">
+		<text class="font-md px-2 py-1" :class="disabled?'text-light-muted':'text-white'">{{name}}</text>
 	</view>
 </template>
 
@@ -10,6 +11,15 @@
 			name: {
 				type: String,
 				default: ''
+			},
+			disabled: {
+				type: Boolean,
+				default: false
+			}
+		},
+		methods:{
+			clickEvent(){
+				if(!this.disabled) return this.$emit("click")
 			}
 		}
 	}

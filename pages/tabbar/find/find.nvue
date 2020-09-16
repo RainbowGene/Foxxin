@@ -66,8 +66,11 @@
 			}
 		},
 		methods: {
+			// 打开朋友圈
 			openMoments() {
-				console.log('pengyouquan')
+				uni.navigateTo({
+					url:"../../find/moments/moments"
+				})
 			}
 		}
 	}

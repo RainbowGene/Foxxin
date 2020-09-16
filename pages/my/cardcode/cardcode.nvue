@@ -1,0 +1,44 @@
+<template>
+	<view class="page">
+		<free-nav-bar title="二维码名片" showBack :showRight="false"></free-nav-bar>
+		<view class="p-5">
+			<view class="bg-white rounded p-4">
+				<view class="flex-row align-center mb-3">
+					<free-avatar src="/static/images/avatar/144.jpg"></free-avatar>
+					<view class="pl-4 flex flex-column">
+						<text class="font-md">昵称</text>
+						<text class="font text-light-muted">地区</text>
+					</view>
+				</view>
+				<!-- 二维码 -->
+				<view class="flex align-center justify-center flex-column">
+					<image src="/static/images/avatar/144.jpg" style="width: 550rpx;height: 550prx;" lazy-load class="bg-secondary mb-3 border-bottom"></image>
+					<text class="font text-light-muted">扫一扫上面的二维码，加我微信</text>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeAvatar from "@/components/free-ui/free-avatar.vue"
+	export default {
+		components: {
+			freeNavBar,
+			freeAvatar
+		},
+		data() {
+			return {
+
+			}
+		},
+		methods: {
+
+		}
+	}
+</script>
+
+<style>
+
+</style>

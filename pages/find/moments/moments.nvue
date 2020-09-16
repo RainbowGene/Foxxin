@@ -1,0 +1,208 @@
+<template>
+	<view>
+		<!-- 渐变式导航 -->
+		<free-transparent-bar :scrollTop="scrollTop" @clickRight="clickRight"></free-transparent-bar>
+		<view class="position-relative" style="height: 620rpx;">
+			<image src="/static/images/lixin.png" mode="scaleToFill" style="height: 590rpx;" class="bg-secondary w-100"
+			 lazy-load></image>
+			<image class="bg-light rounded position-absolute" src="/static/images/avatar/134.jpg" style="width: 120rpx;height: 120rpx;bottom: 0;right: 30rpx;"></image>
+			<text class="text-white position-absolute" style="bottom: 45rpx;right: 160rpx;">昵称</text>
+		</view>
+		<!-- 朋友圈列表样式 -->
+		<block v-for="(item,index) in list" :key="index">
+			<free-moment-list :item='item' :index="index" @action="doAction"></free-moment-list>
+		</block>
+
+		<!-- 评论框 -->
+		<free-popup ref="action" Bottom maskColor>
+			<view class="bg-light border-top flex-row align-center" style="height: 105rpx;">
+				<!-- 文本输入框 -->
+				<textarea fixed focus class="rounded bg-white font-md flex-1 mx-2" style="height:60rpx;line-height: 60rpx;" v-model="content"></textarea>
+				<free-icon-btn @click="changeFaceModel">&#xe657;</free-icon-btn>
+				<free-main-botton name="发送" :disabled="!content.length" @click="send"></free-main-botton>
+			</view>
+			<!-- 表情 -->
+			<scroll-view v-if="faceModel" scroll-y style="height: 350rpx;">
+				<view class="flex-row flex-wrap bg-light">
+					<view class="flex-row align-center justify-center" hover-class="bg-white" style="width: 107rpx;height: 107rpx;"
+					 v-for="(item,i) in faceList" :key="i" @click="addFace(item)">
+						<text>{{item}}</text>
+					</view>
+				</view>
+			</scroll-view>
+		</free-popup>
+	</view>
+</template>
+
+<script>
+	import freeTransparentBar from "@/components/free-ui/free-transparent-bar.vue"
+	import freeMomentList from "@/components/free-ui/free-moment-list.vue"
+	import freePopup from "@/components/free-ui/free-popup.vue"
+	import freeIconBtn from "@/components/free-ui/free-icon-btn.vue"
+	import freeMainBotton from "@/components/free-ui/free-main-button.vue"
+	export default {
+		components: {
+			freeTransparentBar,
+			freeMomentList,
+			freePopup,
+			freeIconBtn,
+			freeMainBotton
+		},
+		data() {
+			return {
+				scrollTop: 0,
+				content: '', // 输入内容
+				commentIndex: -1, // 评论对象
+				list: [{
+						id: 2,
+						avatar: '/static/images/avatar/134.jpg',
+						username: '昵称',
+						context: '以下示例代码，来自于hello uni-app项目，推荐使用HBuilderX，新建uni-app项目，选择hellouni-app模板，可直接体验完整示例。',
+						image: [{
+							src: '/static/images/avatar/134.jpg'
+						}],
+						video: false,
+						create_time: 1567481668,
+						supports: [{ // 点赞
+							id: 1,
+							username: '昵称',
+							avatar: '/static/images/avatar/144.jpg'
+						}],
+						comments: [{ // 评论
+							id: 1,
+							username: '昵称',
+							content: '评论内容'
+						}, {
+							id: 1,
+							username: '昵称',
+							content: '评论内容'
+						}]
+					},
+					{
+						id: 2,
+						avatar: '/static/images/avatar/134.jpg',
+						username: '昵称',
+						context: '',
+						image: [{
+							src: '/static/images/avatar/134.jpg'
+						}, {
+							src: '/static/images/avatar/134.jpg'
+						}, {
+							src: '/static/images/avatar/134.jpg'
+						}],
+						video: false,
+						create_time: 1567481668,
+						supports: [],
+						comments: []
+					},
+					{
+						id: 2,
+						avatar: '/static/images/avatar/134.jpg',
+						username: '昵称',
+						context: '',
+						image: [],
+						video: {
+							poster: "/static/video/demo.jpg",
+							src: '/static/video/demo.mp4',
+						},
+						create_time: 1567481668,
+						supports: [],
+						comments: []
+					}
+				],
+				faceModel: false,
+				faceList: ["😀", "😁", "😂", "😃", "😄", "😅", "😆", "😉", "😊", "😋", "😎", "😍", "😘", "😗", "😙", "😚", "😇",
+					"😐", "😑", "😶", "😏", "😣", "😥", "😮", "😯", "😪", "😫", "😴", "😌", "😛", "😜", "😝", "😒", "😓", "😔", "😕",
+					"😲", "😷", "😖", "😞", "😟", "😤", "😢", "😭", "😦", "😧", "😨", "😬", "😰", "😱", "😳", "😵", "😡", "😠"
+				]
+			}
+		},
+		onPageScroll(e) {
+			this.scrollTop = e.scrollTop
+		},
+		methods: {
+			// 点击更多
+			doAction(obj) {
+				uni.showActionSheet({
+					itemList: ['点赞', '评论'],
+					success: res => {
+						if (res.tapIndex === 0) {
+							this.doSupport(obj)
+						} else {
+							this.content = ''
+							this.faceModel = false
+							this.commentIndex = obj.index
+							this.$refs.action.show()
+						}
+					}
+				})
+			},
+			// 点赞
+			doSupport(obj) {
+				console.log(obj)
+				let id = 1; // 用户id
+				let username = "起飞"
+				obj.item.supports.push({
+					id,
+					username
+				})
+			},
+			// 发送评论
+			send() {
+				console.log(this.commentIndex)
+				this.list[this.commentIndex].comments.push({
+					id: 1,
+					username: 'me',
+					content: this.content
+				})
+				this.$refs.action.hidden()
+				uni.showToast({
+					title: '评论成功',
+					icon: 'none'
+				})
+			},
+			// 添加表情
+			addFace(item) {
+				this.content += item
+			},
+			// 表情栏开关
+			changeFaceModel() {
+				uni.hideKeyboard()
+				setTimeout(() => {
+					this.faceModel = !this.faceModel
+				}, 100)
+			},
+			// 发表朋友圈页面
+			clickRight() {
+				let list = [{
+					name: '图文',
+					key: 'image'
+				}, {
+					name: '视频',
+					key: 'video'
+				}, {
+					name: '文字',
+					key: 'text'
+				}, ]
+				uni.showActionSheet({
+					itemList: list.map(v => v.name),
+					success: res => {
+						if (res.tapIndex > -1) {
+							uni.navigateTo({
+								url: "../add-moment/add-moment?type=" + list[res.tapIndex].key
+							})
+						}
+					}
+				})
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.facelist {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+</style>

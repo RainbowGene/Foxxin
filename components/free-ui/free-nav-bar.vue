@@ -5,18 +5,19 @@
 			<!-- 状态栏留白 -->
 			<view :style="'height:'+statusBarHeight+'px'"></view>
 			<!-- 导航 -->
-			<view class="top-bar">
-				<view class="top-bar-left flex flex-row align-center" :class="showBack?'':'pl-3'">
+			<view class="flex-row align-center justify-center">
+				<view class="flex-1 flex flex-row align-center" :class="showBack?'':'pl-3'">
 					<!-- fanhui -->
-					<free-icon-btn v-if="showBack" @click="back"><text class="iconfont smart">&#xe613;</text></free-icon-btn>
+					<free-icon-btn v-if="showBack" @click="back"><text class="iconfont font-lg">&#xe613;</text></free-icon-btn>
 					<text v-if="title">
 						<slot name="title">{{title}}{{noread|msgNumFilter}}</slot>
 					</text>
+					<slot name="center"></slot>
 				</view>
-				<view v-if="showRight" class="top-bar-right">
+				<view v-if="showRight" class="flex-row align-center text-center">
 					<slot name="right">
-						<free-icon-btn @click="searchHandle"><text class="iconfont">&#xe636;</text></free-icon-btn>
-						<free-icon-btn @click="addHandle"><text class="iconfont smart">&#xe60d;</text></free-icon-btn>
+						<free-icon-btn @click="searchHandle">&#xe6bd;</free-icon-btn>
+						<free-icon-btn @click="addHandle">&#xe61f;</free-icon-btn>
 					</slot>
 				</view>
 			</view>
@@ -25,8 +26,8 @@
 		<view v-if="fixed" :style="fixedStyle"></view>
 		<!-- 拓展菜单 -->
 		<free-popup ref="extend" border bodyBgColor="bg-dark" :bodyW="290" :bodyH="525">
-			<view class="popup-content" style='height: 525rpx;width: 290rpx;'>
-				<view class="popup-item pl-3" hover-class="bg-hover-dark" v-for="(item,index) in menus" :key="index" @click="clickEvent(item.event)">
+			<view class="flex-column" style='height: 525rpx;width: 290rpx;'>
+				<view class="flex-1 justify-center pl-3" hover-class="bg-hover-dark" v-for="(item,index) in menus" :key="index" @click="clickEvent(item.event)">
 					<text class="iconfont text-white font-md" v-html="item.icon+' '+item.name"></text>
 				</view>
 			</view>
@@ -94,6 +95,10 @@
 			showRight: {
 				type: Boolean,
 				default: true
+			},
+			backEvent:{
+				type:Boolean,
+				default:true
 			}
 		},
 		components: {
@@ -103,7 +108,7 @@
 		// 组件中不能使用onLoad
 		mounted() {
 			// #ifdef H5
-			this.navBarHeight = this.statusBarHeight + uni.upx2px(90) // 90rpx高度转为px
+			// this.navBarHeight = this.statusBarHeight + uni.upx2px(90) // 90rpx高度转为px
 			// #endif
 			// #ifdef APP-PLUS-NVUE
 			this.statusBarHeight = plus.navigator.getStatusbarHeight()
@@ -120,16 +125,21 @@
 		},
 		methods: {
 			searchHandle() {
-				console.log('搜索')
+				uni.navigateTo({
+					url:"/pages/compage/search/search"
+				})
 			},
 			addHandle() {
 				if (this.$refs.extend.status) return this.$refs.extend.hidden()
 				this.$refs.extend.show(uni.upx2px(445), uni.upx2px(100))
 			},
 			back() {
-				uni.navigateBack({
-					delta: 1
-				})
+				if(this.backEvent){
+					return uni.navigateBack({
+						delta: 1
+					})
+				}
+				this.$emit('back')
 			}
 		},
 		filters: {
@@ -142,64 +152,4 @@
 </script>
 
 <style lang="scss" scoped>
-	.index-top-bar {
-
-		.top-bar {
-			// padding: 0 15rpx 0 35rpx;
-			height: 90rpx;
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			justify-content: center;
-		}
-
-		.top-bar-left {
-			flex: 1;
-		}
-
-		.top-bar-right {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			text-align: center;
-
-			view {
-				height: 90rpx;
-				width: 90rpx;
-				line-height: 90rpx;
-
-				.iconfont {
-					font-size: 50rpx;
-				}
-
-				.smart {
-					font-size: 48rpx;
-				}
-			}
-		}
-	}
-
-	.fixed-top-bar {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		z-index: 1030;
-	}
-
-	.popup-content {
-		display: flex;
-		flex-direction: column;
-
-		.popup-item {
-			flex: 1;
-			display: flex;
-			flex-wrap: nowrap;
-			justify-content: center;
-		}
-
-		view:last-child {
-			border-bottom: none;
-		}
-	}
 </style>

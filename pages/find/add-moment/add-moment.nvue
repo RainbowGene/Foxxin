@@ -1,0 +1,80 @@
+<template>
+	<!-- fabuye -->
+	<view>
+		<freeNavBar showBack bgColor="bg-light">
+			<free-main-botton slot="right" @click="submit" name="发布"></free-main-botton>
+		</freeNavBar>
+		<!-- 发布主体内容 -->
+		<view class="p-3">
+			<!-- 文本输入框 -->
+			<textarea placeholder="这一刻的想法" style="width: 92%;" v-model="content" class="p-2 font-md mb-3" />
+			<!-- 图片上传 -->
+			<free-upload-image :data="imageList" v-if="type==='image'" @update="uploadImg"></free-upload-image>
+			<!-- 视频发布 -->
+			<view v-if="!video&&type==='video'" class="flex-row align-center justify-center bg-light my-2" style="height: 350rpx;" hover-class="bg-hover-light" @click="uploadVideo">
+				<text class="text-muted" style="font-size: 100rpx;">+</text>
+			</view>
+			<!-- 视频播放组件 -->
+			<video v-if="video&&type==='video'" :src="video" controls></video>
+			<!-- 视频切换按钮 -->
+			<view v-if="video&&type==='video'" class="my-3 flex-row align-center justify-center" hover-class="bg-hover-light" style="height: 100rpx;" @click="uploadVideo">
+				<text class="font-md text-muted">点击切换视频</text>
+			</view>
+			<!-- 权限选择 -->
+			<free-list-item title="所在位置" showRight :showLeftIcon="false"></free-list-item>
+			<free-list-item title="提醒谁看" showRight :showLeftIcon="false"></free-list-item>
+			<free-list-item title="谁可以看" showRight :showLeftIcon="false">
+				<text slot="right" class="font-md">公开</text>
+			</free-list-item>
+			
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeMainBotton from "@/components/free-ui/free-main-button.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import freeUploadImage from "@/components/free-ui/free-upload-image.vue"
+	export default {
+		components:{
+			freeNavBar,
+			freeMainBotton,
+			freeListItem,
+			freeUploadImage
+		},
+		data() {
+			return {
+				content:'',
+				type:'image', // 发布类型
+				imageList:[],
+				video:''
+			}
+		},
+		onLoad(e) {
+			this.type = e.type
+		},
+		methods: {
+			submit(){
+				
+			},
+			// 图片上传
+			uploadImg(arr){
+				this.imageList = arr
+			},
+			// 视频上传
+			uploadVideo(){
+				uni.chooseVideo({
+					maxDuration:60,
+					success:e=>{
+						this.video = e.tempFilePath
+					}
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

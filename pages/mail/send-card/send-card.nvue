@@ -1,0 +1,140 @@
+<template>
+	<!-- 推荐给朋友页面 -->
+	<view class="page">
+		<freeNavBar showBack bgColor="bg-light">
+			<free-main-botton slot="right" :name="muliSelect?('发送('+selectCount+')'):'多选'" @click="handleNavBtn"></free-main-botton>
+		</freeNavBar>
+		<!-- 搜索框 -->
+		<view class="p-3 bg-light position-fixed left-0 right-0" :style="'top:'+topHeight+'px;z-index:999;'">
+			<input type="text" placeholder="搜索" class="bg-white rounded" placeholder-class="text-center" style="height: 80rpx;"
+			 v-model="keyword" />
+		</view>
+		<!-- 搜索框的占位符 -->
+		<view style="height: 140rpx;"></view>
+		<!-- 联系人列表 -->
+		<free-list-item title="更多联系人" :border="false"></free-list-item>
+		<view class="px-2 py-1 bg-light">
+			<text class="font-sm text-muted">{{keyword?'搜索结果':'最近联系人'}}</text>
+		</view>
+		<free-list-item v-for="(item,i) in finallyList" :key="i" :title="item.username" showRight :showRightIcon="false"
+		 :cover="item.avatar" @click="handleItme(item)">
+			<!-- 单选框 -->
+			<view v-if="muliSelect" slot="right" class="user-border rounded-circle flex-row align-center justify-center" style="width: 40rpx;height: 40rpx;">
+				<view v-show="item.ischecked" class="main-bg-color rounded-circle" style="width: 30rpx;height: 30rpx;"></view>
+			</view>
+		</free-list-item>
+		
+		<view v-if="!finallyList.length&&keyword" class="flex-row align-center justify-center" style="height: 100rpx;" >
+			<text class="font text-light-muted">没有任何结果</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeMainBotton from "@/components/free-ui/free-main-button.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	export default {
+		components: {
+			freeNavBar,
+			freeMainBotton,
+			freeListItem
+		},
+		data() {
+			return {
+				topHeight: 0,
+				muliSelect: false,
+				keyword: '', // 搜索关键字
+				list: [{
+					username: '昵称1',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称2',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称3',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称4',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称44',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称444',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称111',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称212121',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称9',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}, {
+					username: '昵称990',
+					avatar: '/static/images/avatar/134.jpg',
+					ischecked: false
+				}]
+			}
+		},
+		onLoad() {
+			let res = uni.getSystemInfoSync()
+			this.topHeight = res.statusBarHeight + uni.upx2px(90)
+		},
+		computed: {
+			// 选中的列表
+			selectList() {
+				return this.list.filter(item => item.ischecked)
+			},
+			// 选中数量
+			selectCount() {
+				return this.selectList.length
+			},
+			// 搜索结果的列表
+			finallyList() {
+				let searchList = this.list.filter(item => {
+					return item.username.indexOf(this.keyword) !== -1
+				})
+				return this.keyword === '' ? this.list : searchList
+			}
+		},
+		methods: {
+			// 多选中|发送按钮
+			handleNavBtn() {
+				if (!this.muliSelect) return this.muliSelect = true
+				// 发送
+				console.log('多人发送')
+			},
+			// item的发送|选中
+			handleItme(item) {
+				if (this.muliSelect) {
+					// 限制选中数量
+					if (this.selectCount === 9) {
+						return uni.showToast({
+							title: '最多选择9个',
+							icon: 'none'
+						})
+					}
+					return item.ischecked = !item.ischecked
+				}
+				// 单项发送:多选框为false
+				console.log('单人发送信息')
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

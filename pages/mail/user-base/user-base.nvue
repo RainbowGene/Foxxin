@@ -84,7 +84,9 @@
 					},
 					{
 						title: '把他推荐给朋友',
-						icon: '&#xe63d;'
+						icon: '&#xe63d;',
+						type: 'navigate',
+						path: 'mail/send-card/send-card'
 					},
 					{
 						title: '设为星标朋友',
@@ -106,7 +108,9 @@
 					},
 					{
 						title: '投诉',
-						icon: '&#xe63c;'
+						icon: '&#xe63c;',
+						type: 'navigate',
+						path: 'mail/user-report/user-report'
 					}
 				]
 			}

@@ -4,7 +4,7 @@
 		<!-- 蒙版 -->
 		<div v-if="mask" class="popup-mask position-fixed top-0 left-0 right-0 bottom-0" :style="getMaskColor" @click="hidden"></div>
 		<!-- 内容 -->
-		<div class="position-fixed free-animated" :class="getBodyClass" :style="getBodyStyle">
+		<div class="position-fixed" :class="getBodyClass" :style="getBodyStyle">
 			<slot></slot>
 		</div>
 	</div>
@@ -20,6 +20,11 @@
 			maskColor: {
 				type: Boolean,
 				default: false // 蒙版透明
+			},
+			// 是否居中
+			center: {
+				type: Boolean,
+				default: false
 			},
 			// 是否处于底部
 			Bottom: {
@@ -66,6 +71,9 @@
 				return `background-color: rgba(0,0,0,${i});`
 			},
 			getBodyClass() {
+				if (this.center) {
+					return 'left-0 right-0 bottom-0 top-0 flex align-center justify-center'
+				}
 				let fixedbottom = this.Bottom ? 'left-0 right-0 bottom-0' : 'rounded border'
 				return `${fixedbottom} ${this.bodyBgColor}`
 			},
@@ -97,17 +105,5 @@
 	.popup-menu {
 		overflow: hidden;
 		z-index: 1000;
-
-		// 动画样式
-		.free-animated {
-			/* #ifdef APP-PLUS-NVUE */
-			transform: scale(0, 0);
-			opacity: 0;
-			/* #endif */
-			/* #ifdef H5 */
-			// transform: scale(0,0);
-			// opacity: 0;
-			/* #endif */
-		}
 	}
 </style>

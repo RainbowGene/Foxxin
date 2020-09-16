@@ -1061,7 +1061,7 @@
 }
 
 .bg-hover-light {
-	background-color: #dae0e5;
+	background-color: #dae0e5!important;
 }
 
 .bg-dark {
@@ -1085,6 +1085,11 @@
 	border-width: 1rpx;
 	border-style: solid;
 	border-color: #dee2e6;
+}
+.user-border{
+	border-width: 1rpx!important;
+	border-style: solid!important;
+	border-color: #dee2e6!important;
 }
 
 .border-top {
