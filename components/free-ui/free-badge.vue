@@ -25,7 +25,8 @@
 <style lang="scss" scoped>
 	// 角标
 	.msg-badge {
-		padding: 6rpx 14rpx;
+		margin-right: 10upx;
+		padding: 6rpx 10rpx;
 		position: absolute;
 		// right: 15rpx;
 		// top: 9rpx;

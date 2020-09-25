@@ -7,7 +7,7 @@
 			</view>
 			<view class="item-right flex-column pr-3 py-3">
 				<view class="top flex-row mb-1">
-					<text class="font-md">{{item.nickname}}</text>
+					<text class="font-md">{{item.name}}</text>
 					<text class="text-muted font-sm">{{item.update_time|formatTime}}</text>
 				</view>
 				<text class="text-muted font-sm">{{item.data}}</text>
@@ -20,6 +20,9 @@
 	import freeBase from "../../common/mixin/free-base.js"
 	import freeAvatar from "./free-avatar.vue"
 	import freeBadge from "./free-badge.vue"
+	import {
+		mapState
+	} from 'vuex'
 	export default {
 		mixins: [freeBase],
 		props: {
@@ -30,11 +33,22 @@
 			freeAvatar,
 			freeBadge
 		},
+		computed: {
+			...mapState({
+				chat: state => state.user.chat
+			})
+		},
 		methods: {
 			onClick() {
 				uni.navigateTo({
-					url:"/pages/chat/chat"
+					url: "../../chat/chat?params=" + encodeURIComponent(JSON.stringify({
+						id: this.item.id,
+						name: this.item.name,
+						avatar: this.item.avatar,
+						chat_type: this.item.chat_type
+					}))
 				})
+				this.chat.readChatItem(this.item.id, this.item.chat_type)
 			},
 			longClick(e) {
 				// console.log(e.changedTouches[0])

@@ -1,5 +1,5 @@
 <template>
-	<image :class="type" :src="src" :style="getStyle" mode="widthFix" @click="toMail"></image>
+	<image :class="type" :src="src?src:'/static/images/userpic.png'" :style="getStyle" mode="widthFix" @click="toMail"></image>
 </template>
 
 <script>
@@ -33,7 +33,7 @@
 				switch (this.clickType) {
 					case 'navigate':
 						uni.navigateTo({
-							url:"/pages/mail/user-base/user-base"
+							url: "/pages/mail/user-base/user-base"
 						})
 						break;
 					default:

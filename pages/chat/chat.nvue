@@ -1,6 +1,6 @@
 <template>
 	<view>
-		<free-nav-bar title="Gene" showBack>
+		<free-nav-bar :title="detail.name" :noread='totalNoreadnum' showBack>
 			<free-icon-btn slot="right" @click="btnMore">&#xe615;</free-icon-btn>
 		</free-nav-bar>
 		<!-- 聊天内容 -->
@@ -8,8 +8,8 @@
 		 :style="scrollStyle">
 			<!-- 内容列表组件 -->
 			<block v-for="(item,index) in list" :key="index">
-				<free-chat-item ref="chatItem" :item="item" :index="index" :pretime="index>0?list[index-1].createtime:0" @clickLong="chickLong"
-				 @preview="previewImg"></free-chat-item>
+				<free-chat-item ref="chatItem" :item="item" :index="index" :pretime="index>0?list[index-1].create_time:0"
+				 @clickLong="chickLong" @preview="previewImg"></free-chat-item>
 			</block>
 		</scroll-view>
 
@@ -42,8 +42,8 @@
 			<free-icon-btn @click="openAction('emoticon')">&#xe657;</free-icon-btn>
 			<free-icon-btn v-if="!sendBtnShow" @click="openAction('action')">&#xe60d;</free-icon-btn>
 			<!-- 发送按钮 -->
-			<view v-if="sendBtnShow" @click="sendMsg('text')" hover-class="bg-chat-item" class="main-bg-color rounded mr-2">
-				<text class="font-md text-white px-2 py-1">发送</text>
+			<view v-if="sendBtnShow" hover-class="bg-chat-item" class="main-bg-color rounded mr-2">
+				<text class="font-md text-white px-2 py-1" @click="send('text')">发送</text>
 			</view>
 		</view>
 		<!-- 拓展菜单 弹出层 不开启蒙版 -->
@@ -71,16 +71,22 @@
 </template>
 
 <script>
+	// #ifdef APP-PLUS-NVUE
+	const dom = weex.requireModule('dom')
+	// #endif
 	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
 	import freeIconBtn from "@/components/free-ui/free-icon-btn.vue"
 	import freeAvatar from "@/components/free-ui/free-avatar.vue"
 	import freeChatItem from "@/components/free-ui/free-chat-item.vue"
 	import freePopup from "@/components/free-ui/free-popup.vue"
+	import auth from "@/common/mixin/auth.js"
 	import {
 		mapState,
 		mapMutations
 	} from "vuex"
+	import $H from "@/common/free-lib/request.js"
 	export default {
+		mixins: [auth],
 		components: {
 			freeNavBar,
 			freeIconBtn,
@@ -99,6 +105,12 @@
 				isRecording: false, // 是否处于录制
 				RecordingStartY: 0, // 按下时的位置
 				unRecord: false, // 是否取消录音
+				detail: {
+					id: 0,
+					name: '',
+					avatar: '',
+					chat_type: 'user'
+				},
 				menus: [{
 						name: '复制',
 						event: ''
@@ -176,65 +188,97 @@
 						}
 					]
 				],
-				list: [{
-						user_id: 2,
-						avatar: '/static/images/avatar/134.jpg',
-						nickname: '昵称',
-						data: '你在干啥子',
-						type: "text",
-						createtime: '1599536390', // img audio video 等
-						isremove: false
-					},
-					{
-						user_id: 1,
-						avatar: '/static/images/avatar/134.jpg',
-						nickname: '昵称',
-						data: '搬砖啦',
-						type: "text",
-						createtime: '1599536390',
-						isremove: false
-					},
-					{
-						user_id: 1,
-						avatar: '/static/images/avatar/134.jpg',
-						nickname: '昵称',
-						data: '/static/audio/1.mp3', // 音频播放地址
-						type: "audio",
-						options: {
-							time: 6 // 音频时长
-						},
-						createtime: '1599622791',
-						isremove: false
-					},
-					{
-						user_id: 2,
-						avatar: '/static/images/avatar/134.jpg',
-						nickname: '昵称',
-						data: '/static/audio/3.mp3', // 音频播放地址
-						type: "audio",
-						options: {
-							time: 40
-						},
-						createtime: '1599622791',
-						isremove: false
-					},
-					{
-						user_id: 1,
-						avatar: '/static/images/avatar/134.jpg',
-						nickname: '昵称',
-						data: '/static/video/demo.mp4', // 视频播放地址
-						options: {
-							poster: '/static/video/demo.jpg' // 视频封面
-						}, // 视频封面
-						type: "video",
-						createtime: '1599622791',
-						isremove: false
-					}
-				]
+				list: []
 			}
 		},
-		created() {
-			this.__init()
+		computed: {
+			...mapState({
+				RECORD: state => state.audio.RECORD,
+				RecordTime: state => state.audio.RecordTime,
+				chat: state => state.user.chat,
+				totalNoreadnum: state => state.user.totalNoreadnum
+			}),
+			scrollStyle() {
+				return `bottom: ${uni.upx2px(90)+this.KeyboardHeight}px;top: ${this.navBarHeight}px;`
+			},
+			menuHeight() {
+				return this.menus.length * 100
+			},
+			menuStyle() {
+				return `width:240rpx;height:${this.menuHeight}rpx;`
+			},
+			// 判断是否为本人，只能撤回自己的
+			isDoSelf() {
+				let id = 1
+				let user_id = this.propIndex > -1 ? this.list[this.propIndex].user_id : 0
+				return user_id === id
+			},
+			getMenus() {
+				return this.menus.filter(v => {
+					if (v.name === "撤回" && this.isDoSelf) return false
+					return true
+				})
+			},
+			sendBtnShow() {
+				return this.text !== '' ? true : false
+			},
+			// 获取操作或者表情列表
+			emoticonOrActionList() {
+				return (this.mode === 'emoticon' || this.mode === "action") ? this[this.mode + 'list'] : []
+			},
+			// 所有图片地址，提供预览
+			imgList() {
+				let arr = []
+				this.list.forEach(item => {
+					if (item.type === 'img') {
+						arr.push(item.data)
+					}
+				})
+				return arr
+			}
+		},
+		onLoad(e) {
+			if (!e.params) return this.backToast('参数错误!');
+			this.detail = JSON.parse(e.params)
+			this.__init();
+			// 创建聊天对象
+			this.chat.createChatObject(this.detail)
+			// 获取历史记录渲染页面
+			this.list = this.chat.getChatDetail()
+			// 监听接收聊天信息
+			uni.$on('onMessage', (message) => {
+				if (message.from_id === this.detail.id && message.chat_type === this.detail.chat_type) {
+					this.list.push(message)
+				}
+			})
+		},
+		destroyed() {
+			// 销毁聊天对象
+			this.chat.destoryChatObject()
+			// 销毁聊天对象
+			uni.$off('onMessage', () => {})
+		},
+		mounted() {
+			var statusBarHeight = 0
+			// #ifdef APP-PLUS-NVUE
+			statusBarHeight = plus.navigator.getStatusbarHeight()
+			// #endif
+			this.navBarHeight = statusBarHeight + uni.upx2px(90)
+			// 监听键盘高度变化
+			uni.onKeyboardHeightChange(res => {
+				if (this.mode !== 'action' && this.mode !== 'emoticon') {
+					this.KeyboardHeight = res.height;
+				}
+			})
+			this.scrollToBottom()
+			// 开启录音监听: 注册发送音频的事件
+			this.regSendVoiceEvent((url) => {
+				if (!this.unRecord) {
+					this.send('audio', url, {
+						time: this.RecordTime
+					})
+				}
+			})
 		},
 		methods: {
 			...mapMutations(['regSendVoiceEvent']),
@@ -258,6 +302,37 @@
 				}
 				this.emoticonlist = arr
 			},
+			// 发送消息
+			send(type, data = '', options = {}) {
+				// 组织数据格式
+				switch (type) {
+					case 'text':
+						data = this.text
+						break;
+				}
+				let message = this.chat.formatSendData({
+					type,
+					data,
+					options
+				})
+				// 渲染到页面
+				let index = this.list.length // 拿到数组长度
+				this.list.push(message)
+				// 发送到服务端
+				this.chat.send(message).then(res => {
+					console.log(res)
+					this.list[index].id = res.id
+					this.list[index].sendStatus = 'success'
+				}).catch(err => {
+					console.log('发送错误:' + err)
+					this.list[index].sendStatus = 'fail'
+				})
+				if (type === 'text') this.text = ''
+				// 置于底部
+				setTimeout(() => {
+					this.scrollToBottom()
+				}, 200)
+			},
 			// 长按气泡
 			chickLong(e) {
 				const {
@@ -278,14 +353,6 @@
 				}
 				this.$refs.extend.hidden()
 			},
-			// 空出导航栏高度
-			navBarPla() {
-				var statusBarHeight = 0
-				// #ifdef APP-PLUS-NVUE
-				statusBarHeight = plus.navigator.getStatusbarHeight()
-				// #endif
-				this.navBarHeight = statusBarHeight + uni.upx2px(90) // 90rpx高度转为px
-			},
 			// 回到底部
 			scrollToBottom() {
 				// #ifdef APP-PLUS-NVUE
@@ -303,43 +370,11 @@
 			btnMore() {
 				// 进入设置页
 				uni.navigateTo({
-					url:"./chat-set/chat-set"
-				})
-			},
-			// 发送消息
-			async sendMsg(type, data = '', options = {}) {
-				let time = (new Date()).getTime()
-				let obj = {
-					user_id: 1,
-					avatar: '/static/images/avatar/134.jpg',
-					nickname: '昵称',
-					createtime: time,
-					isremove: false,
-					options: options
-				}
-				console.log(obj)
-				switch (type) {
-					case 'text':
-						obj.type = type
-						obj.data = this.text
-						break;
-					case 'audio':
-						obj.data = data
-						break;
-					case 'video':
-						obj.type = type
-						obj.data = data
-						break;
-					default:
-						obj.type = type
-						obj.data = data
-						break;
-				}
-				await this.list.push(obj)
-				this.text = ''
-				setTimeout(() => {
-					this.scrollToBottom()
-				}, 200)
+					url: './chat-set/chat-set?params=' + JSON.stringify({
+						id: this.detail.id,
+						chat_type: this.detail.chat_type
+					})
+				});
 			},
 			// 打开底部拓展菜单
 			openAction(type) {
@@ -360,13 +395,13 @@
 								// 发送到服务器
 								// 渲染页面
 								res.tempFilePaths.forEach(item => {
-									this.sendMsg('img', item) // 当做表情包处理
+									this.send('img', item) // 当做表情包处理
 								})
 							}
 						})
 						break;
 					case 'emoticon':
-						this.sendMsg('emoticon', e.icon)
+						this.send('emoticon', e.icon)
 						break;
 					case 'uploadVideo': // 发送视频
 						uni.chooseVideo({
@@ -375,7 +410,7 @@
 								// 发送到服务器(获取封面,返回封面及视频url)
 								// 渲染页面
 								console.log(e)
-								this.sendMsg('video', res.tempFilePath)
+								this.send('video', res.tempFilePath)
 							}
 						})
 						break;
@@ -445,68 +480,6 @@
 				if (newVal !== 'text') {
 					uni.hideKeyboard() // 收起键盘
 				}
-			}
-		},
-		mounted() {
-			this.navBarPla()
-			// 监听键盘高度变化
-			uni.onKeyboardHeightChange(res => {
-				if (this.mode !== 'action' && this.mode !== 'emoticon') {
-					this.KeyboardHeight = res.height;
-				}
-			})
-			this.scrollToBottom()
-			// 开启录音监听: 注册发送音频的事件
-			this.regSendVoiceEvent((url) => {
-				if (!this.unRecord) {
-					this.sendMsg('audio', url, {
-						time: this.RecordTime
-					})
-				}
-			})
-		},
-		computed: {
-			...mapState({
-				RECORD: state => state.audio.RECORD,
-				RecordTime: state => state.audio.RecordTime
-			}),
-			scrollStyle() {
-				return `bottom: ${uni.upx2px(90)+this.KeyboardHeight}px;top: ${this.navBarHeight}px;`
-			},
-			menuHeight() {
-				return this.menus.length * 100
-			},
-			menuStyle() {
-				return `width:240rpx;height:${this.menuHeight}rpx;`
-			},
-			// 判断是否为本人，只能撤回自己的
-			isDoSelf() {
-				let id = 1
-				let user_id = this.propIndex > -1 ? this.list[this.propIndex].user_id : 0
-				return user_id === id
-			},
-			getMenus() {
-				return this.menus.filter(v => {
-					if (v.name === "撤回" && !this.isDoSelf) return false
-					return true
-				})
-			},
-			sendBtnShow() {
-				return this.text !== '' ? true : false
-			},
-			// 获取操作或者表情列表
-			emoticonOrActionList() {
-				return (this.mode === 'emoticon' || this.mode === "action") ? this[this.mode + 'list'] : []
-			},
-			// 所有图片地址，提供预览
-			imgList() {
-				let arr = []
-				this.list.forEach(item => {
-					if (item.type === 'img') {
-						arr.push(item.data)
-					}
-				})
-				return arr
 			}
 		}
 	}

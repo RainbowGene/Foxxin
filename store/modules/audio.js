@@ -1,26 +1,26 @@
 export default {
-	state: {
+	state:{
 		// 存放全局事件
-		events: [],
+		events:[],
 		// 录音管理器
-		RECORD: null,
-		RecordTime: 0,
-		RECORDTIMER: null,
-		sendVoice: null
+		RECORD:null,
+		RecordTime:0,
+		RECORDTIMER:null,
+		sendVoice:null
 	},
-	mutations: {
+	mutations:{
 		// 初始化录音管理器
-		initRECORD(state) {
+		initRECORD(state){
 			state.RECORD = uni.getRecorderManager()
 			// 监听录音开始
-			state.RECORD.onStart(() => {
+			state.RECORD.onStart(()=>{
 				state.RecordTime = 0
-				state.RECORDTIMER = setInterval(() => {
+				state.RECORDTIMER = setInterval(()=>{
 					state.RecordTime++
-				}, 1000)
+				},1000)
 			})
 			// 监听录音结束
-			state.RECORD.onStop((e) => {
+			state.RECORD.onStop((e)=>{
 				if (state.RECORDTIMER) {
 					clearInterval(state.RECORDTIMER)
 					state.RECORDTIMER = null
@@ -32,48 +32,42 @@ export default {
 			})
 		},
 		// 注册发送音频事件
-		regSendVoiceEvent(state, event) {
+		regSendVoiceEvent(state,event){
 			state.sendVoice = event
 		},
 		// 注册全局事件
-		regEvent(state, event) {
+		regEvent(state,event){
 			state.events.push(event)
 		},
 		// 执行全局事件
-		doEvent(state, params) {
-			state.events.forEach(e => {
+		doEvent(state,params){
+			state.events.forEach(e=>{
 				// console.log('执行全局事件');
 				e(params)
 			})
 		},
 		// 注销事件
-		removeEvent(state, event) {
+		removeEvent(state,event){
 			let index = state.events.findIndex(item => {
 				return item === event
 			})
 			if (index !== -1) {
-				state.events.splice(index, 1)
+				state.events.splice(index,1)
 			}
 		}
 	},
-	actions: {
+	actions:{
 		// 分发注册全局事件
-		audioOn({
-			commit
-		}, event) {
-			commit('regEvent', event)
+		audioOn({commit},event){
+			commit('regEvent',event)
 		},
 		// 分发执行全局事件
-		audioEmit({
-			commit
-		}, params) {
-			commit('doEvent', params)
+		audioEmit({commit},params){
+			commit('doEvent',params)
 		},
 		// 分发注销全局事件
-		audioOff({
-			commit
-		}, event) {
-			commit('removeEvent', event)
+		audioOff({commit},event){
+			commit('removeEvent',event)
 		}
 	}
 }

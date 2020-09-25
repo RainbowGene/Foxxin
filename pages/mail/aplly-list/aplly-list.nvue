@@ -1,0 +1,94 @@
+<template>
+	<view class="page">
+		<freeNavBar title="申请列表" showBack :showRight="false"></freeNavBar>
+		<free-list-item v-for="(item,index) in applyList" :key="index" :title="item.user.nickname?item.user.nickname:item.user.username"
+		 :cover="item.user.avatar?item.user.avatar:'/static/images/userpic.png'" showRight :showRightIcon="false">
+			<free-main-botton v-if="item.status==='pending'" slot="right" name="同意" @click="handleArgee(item)"></free-main-botton>
+			<text v-else slot="right" class="font-md text-muted mr-2">{{item|formatText}}</text>
+		</free-list-item>
+		<!-- 上拉加载 -->
+		<view v-if="applyList.length<12" class="flex-row align-center justify-center py-3 bg-light">
+			<text class="text-light-muted font">{{loadmore}}</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import freeMainBotton from "@/components/free-ui/free-main-button.vue"
+	import $H from "@/common/free-lib/request.js"
+	import auth from "@/common/mixin/auth.js"
+	import {
+		mapState
+	} from "vuex"
+	export default {
+		mixins: [auth],
+		components: {
+			freeNavBar,
+			freeListItem,
+			freeMainBotton
+		},
+		data() {
+			return {
+				loadmore: '上拉加载更多', //'加载中...'  '没有更多了'
+				page: 1,
+			}
+		},
+		computed: {
+			...mapState({
+				applyList: state => state.user.apply.rows
+			})
+		},
+		filters: {
+			formatText(value) {
+				let obj = {
+					agree: '已通过',
+					refuse: '已拒绝',
+					ignore: '已忽略'
+				};
+				return obj[value.status]
+			}
+		},
+		onShow() {
+			this.page = 1
+			this.$store.dispatch('getApply', this.page)
+		},
+		// 监听下拉刷新
+		onPullDownRefresh() {
+			this.page = 1
+			this.loadmore = '上拉加载更多'
+			this.$store.dispatch('getApply', this.page).then(res => {
+				uni.showToast({
+					title: '刷新成功!',
+					icon: "none"
+				})
+				uni.stopPullDownRefresh()
+			})
+		},
+		// 监听触底事件
+		onReachBottom() {
+			if (this.loadmore !== '上拉加载更多') return;
+			this.loadmore = '加载中...'
+			this.page += 1;
+			this.$store.dispatch('getApply', this.page).then(res => {
+				this.loadmore = this.applyList.length == this.page * 10 ? '上拉加载更多' : '没有更多了'
+			}).catch(err => {
+				this.page -= 1
+				this.loadmore = '上拉加载更多'
+			})
+		},
+		methods: {
+			// 同意添加
+			handleArgee(item) {
+				uni.navigateTo({
+					url: "../add-friend/add-friend?id=" + item.id
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

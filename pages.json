@@ -1,9 +1,12 @@
 {
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
+			"path": "pages/compage/login/login",
+			"style": {}
+		}, {
 			"path": "pages/tabbar/index/index",
 			"style": {
-				
+
 			}
 		}, {
 			"path": "pages/tabbar/mail/mail",
@@ -14,72 +17,64 @@
 		}, {
 			"path": "pages/tabbar/my/my",
 			"style": {}
+		}, {
+			"path": "pages/chat/chat",
+			"style": {}
+		}, {
+			"path": "pages/chat/video/video",
+			"style": {}
+		}, {
+			"path": "pages/chat/chat-set/chat-set",
+			"style": {}
+		}, {
+			"path": "pages/mail/user-base/user-base",
+			"style": {}
+		}, {
+			"path": "pages/mail/user-remark-tag/user-remark-tag",
+			"style": {}
+		}, {
+			"path": "pages/mail/user-tag-set/user-tag-set",
+			"style": {}
+		}, {
+			"path": "pages/mail/user-moments-auth/user-moments-auth",
+			"style": {}
+		}, {
+			"path": "pages/mail/send-card/send-card",
+			"style": {}
+		}, {
+			"path": "pages/mail/user-report/user-report",
+			"style": {}
+		}, {
+			"path": "pages/find/moments/moments",
+			"style": {}
+		}, {
+			"path": "pages/my/userinfo/userinfo",
+			"style": {}
+		}, {
+			"path": "pages/my/cardcode/cardcode",
+			"style": {}
+		}, {
+			"path": "pages/my/userfava/userfava",
+			"style": {}
+		}, {
+			"path": "pages/compage/search/search",
+			"style": {}
+		}, {
+			"path": "pages/find/add-moment/add-moment",
+			"style": {}
+		}, {
+			"path": "pages/my/setting/setting",
+			"style": {}
+		}, {
+			"path": "pages/mail/add-friend/add-friend",
+			"style": {}
+		}, {
+			"path": "pages/mail/aplly-list/aplly-list",
+			"style": {
+				"enablePullDownRefresh": true
+			}
 		}
-        ,{
-            "path" : "pages/chat/chat",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/chat/video/video",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/chat/chat-set/chat-set",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/mail/user-base/user-base",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/mail/user-remark-tag/user-remark-tag",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/mail/user-tag-set/user-tag-set",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/mail/user-moments-auth/user-moments-auth",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/mail/send-card/send-card",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/mail/user-report/user-report",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/find/moments/moments",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/my/userinfo/userinfo",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/my/cardcode/cardcode",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/my/userfava/userfava",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/compage/search/search",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/find/add-moment/add-moment",
-            "style" : {}
-        }
-        ,{
-            "path" : "pages/compage/login/login",
-            "style" : {}
-        }
-    ],
+	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "Foxxin",
@@ -87,7 +82,7 @@
 		"backgroundColor": "#F8F8F8",
 		"app-plus": {
 			"titleNView": false,
-			"scrollIndicator":"none"
+			"scrollIndicator": "none"
 		}
 	},
 	"tabBar": {

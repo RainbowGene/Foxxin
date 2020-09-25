@@ -1,0 +1,76 @@
+<template>
+	<view class="page">
+		<freeNavBar title="添加好友" showBack :showRight="false"></freeNavBar>
+		<view class="flex flex-column">
+			<text class="font text-secondary px-3 py-1">备注名</text>
+			<input type="text" value="" class="bg-white px-3" style="height: 100rpx;" placeholder="请输入备注名" v-model="form.nickname" />
+		</view>
+		<free-divider></free-divider>
+		<free-list-item title="不让他看我" :showLeftIcon="false" :border="false" showRight :showRightIcon="false">
+			<switch slot="right" :checked="!(!!form.lookme)" @change="form.lookme=form.lookme?0:1" color="#08C060" />
+		</free-list-item>
+		<free-list-item title="不看他" :showLeftIcon="false" :border="false" showRight :showRightIcon="false">
+			<switch slot="right" :checked="!(!!form.lookhim)" @change="form.lookhim=form.lookhim?0:1" color="#08C060" />
+		</free-list-item>
+		<view class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light" @click="submit">
+			<text class="font-md ml-1 text-primary">{{id>0?'同意':'添加好友'}}</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import freeDivider from "@/components/free-ui/free-divider.vue"
+	import $H from "@/common/free-lib/request.js"
+	import auth from "@/common/mixin/auth.js"
+	export default {
+		mixins: [auth],
+		components: {
+			freeNavBar,
+			freeListItem,
+			freeDivider
+		},
+		data() {
+			return {
+				form: {
+					friend_id: 0,
+					nickname: '',
+					lookme: 1,
+					lookhim: 1
+				},
+				id: 0
+			}
+		},
+		onLoad(e) {
+			if (e.params) {
+				this.form = JSON.parse(e.params)
+			}
+			if (e.id) { // 添加到好友
+				this.id = e.id
+			}
+		},
+		methods: {
+			submit() {
+				if (this.id == 0) { // 发送添加好友请求
+					// console.log(this.form)
+					$H.post('/apply/addfriend', this.form).then(res => {
+						this.backToast('已发送请求')
+					})
+					return;
+				}
+				// 处理好友申请
+				$H.post('/apply/handle/' + this.id, { ...this.form,
+					status: 'agree'
+				}).then(res => {
+					this.backToast('添加成功！')
+					this.$store.dispatch('getMailList')
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

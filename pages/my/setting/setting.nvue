@@ -1,0 +1,47 @@
+<template>
+	<!-- 用户收仓 -->
+	<view class="page">
+		<free-nav-bar title="设置" showBack :showRight="false"></free-nav-bar>
+		<!-- 退出按钮 -->
+		<free-divider></free-divider>
+		<view class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light" @click="logout">
+			<text class="font-md text-primary">退出登录</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeDivider from "@/components/free-ui/free-divider.vue"
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import $H from '@/common/free-lib/request.js';
+	export default {
+		components: {
+			freeNavBar,
+			freeDivider
+		},
+		data() {
+			return {
+
+			}
+		},
+		methods: {
+			// 退出登录
+			logout() {
+				$H.post('/logout').then(res => {
+					this.$store.dispatch('logout')
+					uni.showToast({
+						title: '已退出',
+						icon: "none"
+					})
+					uni.navigateTo({
+						url:"/pages/compage/login/login"
+					})
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

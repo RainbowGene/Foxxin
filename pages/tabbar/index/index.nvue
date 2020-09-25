@@ -1,7 +1,13 @@
 <template>
 	<view>
-		<free-nav-bar :title="title" :noread="msgNum">
+		<free-nav-bar :title="title" :noread="totalNoreadnum">
 		</free-nav-bar>
+		<!-- <view class="bg-danger p-3 left-0 right-0 flex align-center justify-between" v-if="!chat || !chat.isOnline">
+			<text class="text-white font">当前处于离线状态</text>
+			<view class="border py-1 px-2 rounded" hover-class="bg-hover-danger" @click="chat.reconnectConfirm()">
+				<text class="text-white font">重新连接</text>
+			</view>
+		</view> -->
 		<block v-for="(item,index) in list" :key="index">
 			<!-- 置顶列表 -->
 			<free-media-list v-if="item.istop" :item="item" :index="index" @click="itemClick" @clickLong="clickLong"></free-media-list>
@@ -22,10 +28,15 @@
 </template>
 
 <script>
-	import freePopup from "../../../components/free-ui/free-popup.vue"
-	import freeNavBar from "../../../components/free-ui/free-nav-bar.vue"
-	import freeMediaList from "../../../components/free-ui/free-media-list.vue"
+	import freePopup from "@/components/free-ui/free-popup.vue"
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeMediaList from "@/components/free-ui/free-media-list.vue"
+	import auth from "@/common/mixin/auth.js"
+	import {
+		mapState
+	} from "vuex"
 	export default {
+		mixins: [auth],
 		components: {
 			freeMediaList,
 			freeNavBar,
@@ -35,7 +46,6 @@
 			return {
 				propIndex: -1, // 默认没有操作
 				title: '聊天',
-				msgNum: 10, //现有未处理聊天
 				menus: [{
 						name: '设为置顶',
 						event: 'setTop'
@@ -44,55 +54,6 @@
 						name: '删除该聊天',
 						event: 'delChat'
 					}
-				],
-				list: [{
-						avatar: '../../../static/images/avatar/144.jpg',
-						nickname: '小迷妹',
-						update_time: '1599207514',
-						data: 'Ni是无意过堂风',
-						noreadnum: 2,
-						istop: false
-					},
-					{
-						avatar: '../../../static/images/avatar/144.jpg',
-						nickname: 'Gene1',
-						update_time: '1598948037',
-						data: 'Ni',
-						noreadnum: 0,
-						istop: false
-					},
-					{
-						avatar: '../../../static/images/avatar/144.jpg',
-						nickname: 'Gene2',
-						update_time: '1567325637',
-						data: 'Ni',
-						noreadnum: 0,
-						istop: true
-					},
-					{
-						avatar: '../../../static/images/avatar/144.jpg',
-						nickname: 'Gene3',
-						update_time: '1567325637',
-						data: 'Ni',
-						noreadnum: 0,
-						istop: false
-					},
-					{
-						avatar: '../../../static/images/avatar/144.jpg',
-						nickname: 'Gene4',
-						update_time: '1567325637',
-						data: 'Ni',
-						noreadnum: 0,
-						istop: false
-					},
-					{
-						avatar: '../../../static/images/avatar/144.jpg',
-						nickname: 'Gene5',
-						update_time: '1567325637',
-						data: 'Ni',
-						noreadnum: 0,
-						istop: false
-					}
 				]
 			}
 		},
@@ -100,10 +61,15 @@
 
 		},
 		computed: {
+			...mapState({
+				list: state => state.user.chatList,
+				totalNoreadnum: state => state.user.totalNoreadnum,
+				chat: state => state.user.chat
+			}),
 			menuHeight() {
 				return this.menus.length * 100
 			},
-			menuStyle() {     
+			menuStyle() {
 				return `width:240rpx;height:${this.menuHeight}rpx;`
 			}
 		},
@@ -136,11 +102,13 @@
 			},
 			// 删除当前会话
 			delChat() {
-				this.list.splice(this.propIndex, 1)
+				let item = this.list[this.propIndex]
+				this.chat.removeChatItem(item.id, item.chat_type)
 			},
 			// 置顶/取消置顶会话
 			setTop() {
-				this.list[this.propIndex].istop = !this.list[this.propIndex].istop
+				let item = this.list[this.propIndex]
+				item.istop = !item.istop
 			}
 		}
 	}

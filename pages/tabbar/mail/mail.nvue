@@ -3,14 +3,20 @@
 		<free-nav-bar :title="title"></free-nav-bar>
 		<!-- 通讯录列表：使用scroll-into-view一定要为scroll组件设置高度 -->
 		<scroll-view scroll-y="true" :style="'height:'+scrollHeight+ 'px;'" :scroll-into-view="scrollInto">
-			<free-list-item v-for="(item,index) in maillist" :key="index" :cover="item.cover" :title="item.title"></free-list-item>
+			<free-list-item v-for="item in maillist" :key="item.id" :cover="item.cover" :title="item.title" showRight
+			 :showRightIcon="false" @click="navigate(item.path)">
+				<view v-if="applyCount>0" slot="right" class="flex-row align-center justify-center" style="width: 80upx;">
+					<free-badge v-if="item.id==='friend'&&applyCount>0" :value='applyCount'></free-badge>
+				</view>
+			</free-list-item>
 
-			<block v-for="(item,i) in mocklist" :key="i">
-				<view :id="'item-'+item.letter">
-					<view v-if="item.data.length" class="py-2 px-3 border-bottom bg-light">
-						<text class="font-sm text-dark">{{item.letter}}</text>
+			<block v-for="(item,i) in list" :key="i">
+				<view :id="'item-'+item.title">
+					<view v-if="item.list.length" class="py-2 px-3 border-bottom bg-light">
+						<text class="font-sm text-dark">{{item.title}}</text>
 					</view>
-					<free-list-item v-for="(item2,index2) in item.data" :key="index2" cover="/static/images/avatar/5.jpg" :title="item2"></free-list-item>
+					<free-list-item v-for="(item2,index2) in item.list" :key="index2" :cover="item2.avatar?item2.avatar:'/static/images/userpic.png'"
+					 :title="item2.name" @click="navigate('mail/user-base/user-base?user_id='+item2.user_id)"></free-list-item>
 				</view>
 			</block>
 		</scroll-view>
@@ -18,8 +24,8 @@
 		<!-- 侧边导航条 -->
 		<view class="flex flex-column position-fixed right-0 bg-light" :style="'top:'+topHeight+'px;bottom:50px;'" style="width: 40rpx;"
 		 @touchstart="touchstart" @touchmove="touchmove" @touchend="touchend">
-			<view v-for="(item,index) in mocklist" :key="index" class="flex-1 flex-row align-center justify-center">
-				<text class="font-sm">{{item.letter}}</text>
+			<view v-for="(item,index) in list" :key="index" class="flex-1 flex-row align-center justify-center">
+				<text class="font-sm">{{item.title}}</text>
 			</view>
 		</view>
 		<!-- 大字母显示 -->
@@ -32,10 +38,17 @@
 <script>
 	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
 	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import freeBadge from "@/components/free-ui/free-badge.vue"
+	import auth from "@/common/mixin/auth.js"
+	import {
+		mapState
+	} from 'vuex'
 	export default {
+		mixins: [auth],
 		components: {
 			freeNavBar,
-			freeListItem
+			freeListItem,
+			freeBadge
 		},
 		data() {
 			return {
@@ -45,73 +58,44 @@
 				title: '通讯录',
 				letterName: '',
 				maillist: [{
+						id: 'group',
 						cover: '../../../static/images/mail/group.png',
 						title: '群聊',
-						event: "aa"
+						path: ""
 					},
 					{
+						id: 'friend',
 						cover: '../../../static/images/mail/friend.png',
 						title: '新的朋友',
-						event: "aa"
+						path: "mail/aplly-list/aplly-list"
 					},
 					{
+						id: 'tag',
 						cover: '../../../static/images/mail/tag.png',
 						title: '标签',
-						event: "aa"
+						path: ""
 					}
 				],
-				mocklist: [{
-						letter: 'A',
-						data: [
-							'阿松', '阿猫'
-						]
-					},
-					{
-						letter: 'B',
-						data: [
-							'宝贝', '宝哥'
-						]
-					},
-					{
-						letter: 'C',
-						data: ['China', 'Canada', 'Caaa']
-					},
-					{
-						letter: 'D',
-						data: ['大头', '但丁', '哒哒']
-					},
-					{
-						letter: 'E',
-						data: ['の', 'E子核', '呃呃']
-					},
-					{
-						letter: 'F',
-						data: ['付柔根', '福Lily', '符华']
-					},
-					{
-						letter: 'G',
-						data: []
-					},
-					{
-						letter: 'H',
-						data: ['华为', '华中科技大学', '黄少天']
-					}
-				]
 			}
 		},
 		onLoad() {
 			let res = uni.getSystemInfoSync()
 			this.topHeight = res.statusBarHeight + uni.upx2px(90)
 			this.scrollHeight = res.windowHeight - this.topHeight
-			this.scrollInto = 'item-D'
+
+			this.$store.dispatch('getMailList')
 		},
 		computed: {
+			...mapState({
+				applyCount: state => state.user.apply.count,
+				list: state => state.user.mailList
+			}),
 			// 显示字母的浮动位置
-			modelTop(){
+			modelTop() {
 				return (this.scrollHeight - uni.upx2px(150)) / 2
 			},
 			itemHeight() { // 每个索引的高度
-				let count = this.mocklist.length
+				let count = this.list.length
 				if (count < 1) return 0
 				return this.scrollHeight / count
 			}
@@ -127,16 +111,17 @@
 			},
 			// 触摸结束
 			touchend(e) {
-				this.letterName =''
+				this.letterName = ''
 			},
 			changeScrollInto(e) {
 				let Y = e.changedTouches[0].clientY
 				let index = Math.floor((Y - this.topHeight) / this.itemHeight)
 				// let index = Math.floor(Y / this.itemHeight)
-				let item = this.mocklist[index]
+				let item = this.list[index]
 				if (item) {
-					this.scrollInto = 'item-' + item.letter
-					this.letterName = item.letter
+					if (item.title === '#') return; // 跳到底部
+					this.scrollInto = 'item-' + item.title
+					this.letterName = item.title
 				}
 			}
 		}

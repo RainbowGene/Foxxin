@@ -1,44 +1,48 @@
 <template>
 	<view class="page">
-		<freeNavBar showBack bgColor="bg-white">
-			<free-icon-btn slot="right" @click="openAction">&#xe615;</free-icon-btn>
+		<freeNavBar showBack bgColor="bg-white" :showRight="detail.friend">
+			<free-icon-btn v-if="detail.friend" slot="right" @click="openAction">&#xe615;</free-icon-btn>
 		</freeNavBar>
 		<!-- 基本信息栏 -->
 		<view class="py-4 px-3 flex flex-row align-center bg-white border-bottom">
-			<free-avatar src="/static/images/avatar/134.jpg" size="130"></free-avatar>
+			<free-avatar :src="detail.avatar" size="130"></free-avatar>
 			<view class="flex flex-column ml-3 flex-1">
 				<!-- 备注名不存在使用昵称 -->
 				<view class="flex flex-row align-center justify-between">
-					<text class="font-lg font-weight-bold mb-1">{{nickname?nickname:'Gene'}}</text>
-					<text v-if="isStar" style="color:orange;" class="iconfont font-lg ml-1">&#xe639;</text>
+					<text class="font-lg font-weight-bold mb-1">{{detail.nickname}}</text>
+					<text v-if="detail.star" style="color:orange;" class="iconfont font-lg ml-1">&#xe639;</text>
 				</view>
-				<text class="font-sm text-light-muted">Fox号：1767386755</text>
+				<text class="font-sm text-light-muted">Fox号：{{detail.username}}</text>
 				<text class="font-sm text-light-muted">地区：广东深圳</text>
 			</view>
 		</view>
 
-		<free-list-item :showLeftIcon="false" @click="navigate('mail/user-remark-tag/user-remark-tag')">
+		<free-list-item v-if="detail.friend" :showLeftIcon="false" @click="navigate(actions[0].path)">
 			<view class="flex flex-row flex-wrap align-center">
 				<text class="font-md text-dark mr-2">标签</text>
 				<!-- 最多显示5个 -->
-				<text v-show="index<5" class="font-md text-light-muted mr-1" v-for="(item,index) in taglist" :key="index">{{item}}</text>
-				<text v-if="taglist.length<1" class="font-md text-light-muted mr-1">未设置</text>
+				<text v-show="index<5" class="font-md text-light-muted mr-1" v-for="(item,index) in detail.tags" :key="index">{{item}}</text>
+				<text v-if="detail.tags.length<1" class="font-md text-light-muted mr-1">未设置</text>
 			</view>
 		</free-list-item>
 		<free-divider></free-divider>
-		<free-list-item :showLeftIcon="false">
+		<free-list-item v-if="detail.friend" :showLeftIcon="false">
 			<view class="flex flex-row align-center">
 				<text class="font-md text-dark mr-2">朋友圈</text>
 				<image class="mr-2" src="../../../static/images/emoticon/14.gif" style="width: 60rpx;height: 60rpx;"></image>
 				<image class="mr-2" src="../../../static/images/emoticon/15.gif" style="width: 60rpx;height: 60rpx;"></image>
 			</view>
 		</free-list-item>
-		<free-list-item title="更多信息" :showLeftIcon="false"></free-list-item>
+		<free-list-item title="更多信息" :showLeftIcon="false" showRight></free-list-item>
 		<free-divider></free-divider>
 
-		<view class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light">
-			<text v-if="!isBlack" class="font-md text-primary iconfont">&#xe60a;</text>
-			<text :class="isBlack?'text-danger':'text-primary'" class="font-md  ml-1">{{isBlack?'移出黑名单':'发信息'}}</text>
+		<view v-if="detail.friend" class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light" @click="doEvent">
+			<text v-if="!detail.isblack" class="font-md text-primary iconfont">&#xe60a;</text>
+			<text :class="detail.isblack?'text-danger':'text-primary'" class="font-md  ml-1">{{detail.isblack?'移出黑名单':'发信息'}}</text>
+		</view>
+
+		<view v-if="!detail.friend" class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light" @click="navigate(addFriend)">
+			<text class="font-md ml-1 text-primary">加为好友</text>
 		</view>
 
 		<!-- 拓展菜单 -->
@@ -61,6 +65,8 @@
 	import freeListItem from "@/components/free-ui/free-list-item.vue"
 	import freeIconBtn from "@/components/free-ui/free-icon-btn.vue"
 	import freePopup from "@/components/free-ui/free-popup.vue"
+	import auth from '@/common/mixin/auth.js';
+	import $H from "@/common/free-lib/request.js"
 	export default {
 		components: {
 			freeNavBar,
@@ -70,62 +76,113 @@
 			freeIconBtn,
 			freePopup
 		},
+		mixins: [auth],
 		data() {
 			return {
-				isStar: false, // 星标
-				isBlack: false, // 黑名单
-				nickname: '', // 备注名
-				taglist: [],
-				actions: [{
-						title: '设置备注和标签',
-						icon: '&#xe6b7;',
-						type: 'navigate',
-						path: 'mail/user-remark-tag/user-remark-tag'
-					},
-					{
-						title: '把他推荐给朋友',
-						icon: '&#xe63d;',
-						type: 'navigate',
-						path: 'mail/send-card/send-card'
-					},
-					{
-						title: '设为星标朋友',
-						icon: '&#xe639;',
-						type: 'event',
-						event: 'setStar'
-					},
-					{
-						title: '设置朋友圈动态和权限',
-						icon: '&#xe6a8;',
-						type: 'navigate',
-						path: 'mail/user-moments-auth/user-moments-auth'
-					},
-					{
-						title: '加入黑名单',
-						icon: '&#xe62a;',
-						type: 'event',
-						event: 'setBlack'
-					},
-					{
-						title: '投诉',
-						icon: '&#xe63c;',
-						type: 'navigate',
-						path: 'mail/user-report/user-report'
-					}
-				]
+				detail: {
+					id: 0,
+					username: "",
+					nickname: "",
+					avatar: "",
+					sex: "",
+					sign: "",
+					area: "",
+					friend: false,
+					lookme: 1,
+					lookhim: 1,
+					star: 0,
+					isblack: 0,
+					tags: []
+				},
 			}
 		},
-		onLoad() {
+		onLoad(e) {
+			if (!e.user_id) {
+				return this.backToast()
+			}
+			this.detail.id = e.user_id // 存用户id
+
 			uni.$on('saveRemark', (info) => {
-				console.log(info)
-				this.taglist = info.taglist
+				this.detail.tags = info.detail.tags
 				this.nickname = info.nickname
 			})
+		},
+		onShow() {
+			// 获取当前用户资料
+			this.getData()
 		},
 		beforeDestroy() {
 			uni.$off('saveRemark')
 		},
+		computed: {
+			addFriend() {
+				let obj = {
+					friend_id: this.detail.id,
+					nickname: this.detail.nickname,
+					lookme: typeof this.detail.lookme === 'number' ? this.detail.lookme : 1,
+					lookhim: typeof this.detail.lookhim === 'number' ? this.detail.lookhim : 1
+				}
+				return 'mail/add-friend/add-friend?params=' + JSON.stringify(obj)
+			},
+			tagPath() {
+				return "mail/user-remark-tag/user-remark-tag?params=" + JSON.stringify({
+					user_id: this.detail.id,
+					nickname: this.detail.nickname,
+					tags: this.detail.tags ? this.detail.tags.join(',') : ''
+				})
+			},
+			actions() {
+				return [{
+					title: '设置备注和标签',
+					icon: '&#xe6b7;',
+					type: 'navigate',
+					path: this.tagPath
+				}, {
+					title: '把他推荐给朋友',
+					icon: '&#xe63d;',
+					type: 'navigate',
+					path: 'mail/send-card/send-card'
+				}, {
+					title: this.detail.star ? '取消星标' : '设为星标朋友',
+					icon: '&#xe639;',
+					type: 'event',
+					event: 'setStar'
+				}, {
+					title: '设置朋友圈动态和权限',
+					icon: '&#xe6a8;',
+					type: 'navigate',
+					path: 'mail/user-moments-auth/user-moments-auth?user_id=' + this.detail.id + '&params=' + JSON.stringify({
+						lookme: this.detail.lookme,
+						lookhim: this.detail.lookhim
+					})
+				}, {
+					title: this.detail.isblack ? '移除黑名单' : '加入黑名单',
+					icon: '&#xe62a;',
+					type: 'event',
+					event: 'setBlack'
+				}, {
+					title: '投诉',
+					icon: '&#xe63c;',
+					type: 'navigate',
+					path: 'mail/user-report/user-report?params=' + JSON.stringify({
+						user_id: this.detail.id,
+						type: 'user'
+					})
+				}]
+			}
+		},
 		methods: {
+			getData() {
+				$H.get('/friend/read/' + this.detail.id).then(res => {
+					if (!res) {
+						return this.backToast('该用户不存在')
+					}
+					if (res.moments && res.moments[0]) {
+						res.moments[0].image = res.moments[0].image.split(',')
+					}
+					this.detail = res
+				})
+			},
 			// 更多按钮:弹出操作菜单
 			openAction() {
 				if (this.$refs.action.status) return this.$refs.action.hidden()
@@ -157,20 +214,45 @@
 			},
 			// 设为星标
 			setStar(e) {
-				this.isStar = !this.isStar
-				e.title = this.isStar ? '取消星标' : '设为星标朋友'
+				let star = this.detail.star == 0 ? 1 : 0
+				$H.post('/friend/setstar/' + this.detail.id, {
+					star
+				}).then(res => {
+					this.detail.star = star
+				})
 			},
 			// 加入黑名单
 			async setBlack(e) {
-				let text = this.isBlack ? '移出黑名单?' : "加入黑名单?"
+				let text = this.detail.isblack ? '移出黑名单' : "加入黑名单"
 				await uni.showModal({
 					content: text,
 					success: (res) => {
 						if (res.confirm) {
-							this.isBlack = !this.isBlack
-							e.title = this.isBlack ? '移出黑名单' : "加入黑名单"
+							let isblack = this.detail.isblack == 0 ? 1 : 0
+							$H.post('/friend/setblack/' + this.detail.id, {
+								isblack
+							}).then(res => {
+								this.detail.isblack = isblack
+							})
+							uni.showToast({
+								title: text + '成功',
+								icon: "none"
+							})
 						}
 					}
+				})
+			},
+			doEvent() {
+				if (this.detail.isblack) {
+					return this.setBlack()
+				}
+				uni.navigateTo({
+					url: "../../chat/chat?params=" + encodeURIComponent(JSON.stringify({
+						id: this.detail.id,
+						name: this.detail.nickname ? this.detail.nickname : this.detail.username,
+						avatar: this.detail.avatar,
+						chat_type: 'user'
+					}))
 				})
 			}
 		}

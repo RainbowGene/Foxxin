@@ -21,22 +21,34 @@
 <script>
 	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
 	import freeMainBotton from "@/components/free-ui/free-main-button.vue"
+	import auth from "@/common/mixin/auth.js"
+	import $H from "@/common/free-lib/request.js"
 	export default {
+		mixins: [auth],
 		components: {
 			freeNavBar,
 			freeMainBotton
 		},
 		data() {
 			return {
-				nickname:'',
+				id: 0,
+				nickname: '',
 				taglist: []
 			}
 		},
-		onLoad() {
+		onLoad(e) {
 			// 监听标签修改后传回
 			uni.$on('updateTag', (newlist) => {
 				this.taglist = newlist
 			})
+			if (!e.params) {
+				return this.backToast('参数错误')
+			}
+			// 接收参数
+			let params = JSON.parse(e.params)
+			this.id = params.user_id;
+			this.nickname = params.nickname
+			this.taglist = params.tags === '' ? [] : params.tags.split(',')
 		},
 		// 页面销毁之前，注销监听事件
 		beforeDestroy() {
@@ -45,12 +57,17 @@
 		methods: {
 			// 提交修改
 			send() {
-				uni.$emit('saveRemark', {
-					taglist: this.taglist,
-					nickname:this.nickname
-				})
-				uni.navigateBack({
-					delta:1
+				$H.post('/friend/setremarktag/' + this.id, {
+					nickname: this.nickname,
+					tags: this.taglist.join(',')
+				}).then(res => {
+					uni.showToast({
+						title: '已修改',
+						icon: 'none'
+					});
+					uni.navigateBack({
+						delta: 1
+					})
 				})
 			},
 			// 跳转标签设置页

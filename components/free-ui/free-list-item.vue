@@ -11,7 +11,7 @@
 			<view class="flex-row align-center" v-if="showRight">
 				<slot name="right"></slot>
 				<!-- 右箭头 -->
-				<text v-if="showRightIcon" class="iconfont text-light-muted font-md">&#xe612;</text>
+				<text v-if="showRightIcon" class="iconfont text-light-muted font-md ml-3">&#xe612;</text>
 			</view>
 		</view>
 	</view>

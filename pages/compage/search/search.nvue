@@ -2,9 +2,10 @@
 	<!-- 通用搜索页 -->
 	<view class="page">
 		<free-nav-bar showBack :showRight="false" :backEvent="false" @back="back">
-			<input slot="center" class="border" type="text" :placeholder="plaText" style="width: 650rpx;line-height: 90rpx;" />
+			<input slot="center" class="border" type="text" :placeholder="plaText" style="width: 650rpx;line-height: 90rpx;"
+			 v-model="keyword" @confirm="confirm" />
 		</free-nav-bar>
-		<view v-if="!searchType">
+		<view v-if="!searchType&&reslist.length===0">
 			<view class="pt-3 flex-row align-center justify-center">
 				<text class="font text-light-muted">搜索指定内容</text>
 			</view>
@@ -14,17 +15,25 @@
 				</view>
 			</view>
 		</view>
+
+		<free-list-item v-for="(item,index) in reslist" :key="index" :title="item.nickname?item.nickname:item.username"
+		 :cover="item.avatar? item.avatar:'/static/images/userpic.png'" @click="open(item.id)"></free-list-item>
 	</view>
 </template>
 
 <script>
 	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import $H from "@/common/free-lib/request.js"
 	export default {
 		components: {
-			freeNavBar
+			freeNavBar,
+			freeListItem
 		},
 		data() {
 			return {
+				keyword: '',
+				reslist: [],
 				list: [{
 						name: '聊天记录',
 						event: '',
@@ -60,6 +69,23 @@
 					})
 				}
 				this.searchType = ''
+			},
+			// 电脑回车触发/软键盘搜索触发
+			confirm() {
+				$H.post('/search/user', {
+					keyword: this.keyword
+				}).then(res => {
+					this.reslist = []
+					if (res) {
+						this.reslist.push(res)
+					}
+				})
+			},
+			// 进入用户资料页（传id）
+			open(id) {
+				uni.navigateTo({
+					url: '/pages/mail/user-base/user-base?user_id=' + id
+				})
 			}
 		}
 	}

@@ -11,7 +11,7 @@
 		<!-- 主体内容 -->
 		<view v-if="!item.isremove" class="flex pt-1 position-relative" :class="isSelf?'flex-row-reverse':'flex-row'">
 			<view>
-				<free-avatar clickType="navigate" :src="item.avatar" :size="60"></free-avatar>
+				<free-avatar clickType="navigate" :src="item.form_avatar" :size="60"></free-avatar>
 			</view>
 			<text v-if="item.type!=='emoticon'&&item.type!=='img'&&item.type!=='video'" class="iconfont position-absolute font-lg"
 			 :class="isSelf?'text-chat-item chat-right-icon':'chat-left-icon text-white'">{{isSelf?'&#xe61c;':'&#xe6a7;'}}</text>
@@ -36,6 +36,11 @@
 				</view>
 			</div>
 		</view>
+
+		<!-- 发送状态提示 -->
+		<view v-if="item.sendStatus&&item.sendStatus!=='success'" class="flex-row align-center justify-end">
+			<text class="font-sm" :class="item.sendStatus==='fail'?'text-danger':'text-light-muted'">{{item.sendStatus==='fail'?'发送失败':'发送中...'}}</text>
+		</view>
 	</view>
 </template>
 
@@ -52,7 +57,11 @@
 			item: Object,
 			index: Number,
 			// 上一条消息的时间戳
-			pretime: [Number, String]
+			pretime: [Number, String],
+			shownickname: {
+				type: Boolean,
+				default: false
+			}
 		},
 		data() {
 			return {
@@ -70,15 +79,17 @@
 		},
 		computed: {
 			...mapState({
-
+				user: state => state.user.user
 			}),
+			// 发送者是否本人
 			isSelf() {
-				let id = 1 // 假设拿到了id
-				return this.item.user_id === id
+				// 获取本人id
+				let id = this.user.id ? this.user.id : 0
+				return this.item.from_id === id
 			},
 			showTime() {
 				// 间隔超过300秒不要显示了
-				return $time.getChatTime(this.item.createtime, this.pretime)
+				return $time.getChatTime(this.item.create_time, this.pretime)
 			},
 			// 气泡是否显示
 			labelClass() {

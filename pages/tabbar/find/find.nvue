@@ -53,7 +53,9 @@
 	import freeListItem from "../../../components/free-ui/free-list-item.vue"
 	import freeAvatar from "../../../components/free-ui/free-avatar.vue"
 	import freeDivider from "../../../components/free-ui/free-divider.vue"
+	import auth from "@/common/mixin/auth.js"
 	export default {
+		mixins: [auth],
 		components: {
 			freeNavBar,
 			freeListItem,
@@ -69,7 +71,7 @@
 			// 打开朋友圈
 			openMoments() {
 				uni.navigateTo({
-					url:"../../find/moments/moments"
+					url: "../../find/moments/moments"
 				})
 			}
 		}
@@ -77,5 +79,5 @@
 </script>
 
 <style lang="scss" scoped>
-	
+
 </style>

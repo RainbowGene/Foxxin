@@ -10,8 +10,8 @@
 			</view>
 			<view class="px-3">
 				<input type="text" class="bg-light px-3 mb-3 font" placeholder="请输入用户名" style="height: 100rpx;" v-model="form.username" />
-				<input type="text" class="bg-light px-3 mb-3 font" placeholder="请输入密码" style="height: 100rpx;" v-model="form.password" />
-				<input v-if="type === 'reg'" type="text" class="bg-light px-3 mb-3 font" placeholder="请输入确认密码" style="height: 100rpx;"
+				<input type="password" class="bg-light px-3 mb-3 font" placeholder="请输入密码" style="height: 100rpx;" v-model="form.password" />
+				<input v-if="type === 'reg'" type="password" class="bg-light px-3 mb-3 font" placeholder="请输入确认密码" style="height: 100rpx;"
 				 v-model="form.repassword" />
 			</view>
 			<view class="p-3 flex-row align-center justify-center">
@@ -41,8 +41,8 @@
 				show: false,
 
 				form: {
-					username: "",
-					password: "",
+					username: "13026636499",
+					password: "123456",
 					repassword: ""
 				}
 			}
@@ -71,6 +71,7 @@
 					repassword: ""
 				}
 			},
+			// 表单提交
 			submit() {
 				$H.post('/' + this.type, this.form, {
 					token: false
@@ -79,19 +80,20 @@
 					if (this.type === 'login') {
 						this.$store.dispatch('login', res)
 						uni.showToast({
-							title: '登录成功',
-							icon: 'none'
-						});
+							title: '登录成功！',
+							icon: "none"
+						})
 						return uni.switchTab({
-							url: "/pages/tabbar/index/index"
+							url: '/pages/tabbar/index/index'
 						})
 					}
 					// 注册
 					this.changeType()
 					uni.showToast({
-						title: '注册成功，去登陆',
-						icon: 'none'
-					});
+						title: '注册成功！',
+						icon: "none"
+					})
+					this.type = "login"
 				})
 			}
 		}

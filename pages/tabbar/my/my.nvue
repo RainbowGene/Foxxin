@@ -3,10 +3,11 @@
 		<free-nav-bar bgColor="bg-white">
 			<free-icon-btn slot="right">&#xe626;</free-icon-btn>
 		</free-nav-bar>
-		<free-list-item cover="/static/images/avatar/15.jpg" title="Gene" showRight coverSize="120" @click="open('my/userinfo/userinfo')">
+		<free-list-item :cover="user.avatar?user.avatar:'/static/images/userpic.png'" :title="nickname" showRight coverSize="120"
+		 @click="open('my/userinfo/userinfo')">
 			<view class="flex flex-column justify-between">
-				<text class="text-dark font-weight-bold font-lg">Gene</text>
-				<text class="text-light-muted font-sm mt-2">1767386755</text>
+				<text class="text-dark font-weight-bold font-lg">{{nickname}}</text>
+				<text class="text-light-muted font-sm mt-2">Chat号:{{user.username}}</text>
 			</view>
 			<view slot="right" @click.stop="scanCode">
 				<text class="iconfont font-md mr-2">&#xe610;</text>
@@ -30,7 +31,7 @@
 			<text slot="icon" class="iconfont font-lg py-1">&#xe657;</text>
 		</free-list-item>
 		<free-divider></free-divider>
-		<free-list-item title="设置" showRight>
+		<free-list-item title="设置" showRight @click="open('my/setting/setting')">
 			<text slot="icon" class="iconfont font-lg py-1">&#xe619;</text>
 		</free-list-item>
 	</view>
@@ -41,7 +42,12 @@
 	import freeIconBtn from "@/components/free-ui/free-icon-btn.vue"
 	import freeListItem from "@/components/free-ui/free-list-item.vue"
 	import freeDivider from "@/components/free-ui/free-divider.vue"
+	import auth from "@/common/mixin/auth.js"
+	import {
+		mapState
+	} from 'vuex'
 	export default {
+		mixins: [auth],
 		components: {
 			freeNavBar,
 			freeIconBtn,
@@ -51,6 +57,14 @@
 		data() {
 			return {
 
+			}
+		},
+		computed: {
+			...mapState({
+				user: state => state.user.user
+			}),
+			nickname() {
+				return this.user.nickname ? this.user.nickname : this.user.username
 			}
 		},
 		methods: {

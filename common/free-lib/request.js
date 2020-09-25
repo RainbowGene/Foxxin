@@ -1,6 +1,5 @@
 import $C from './config.js';
 import $U from './util.js';
-import $store from '@/store/index.js';
 export default {
     // 全局配置
     common:{
@@ -45,7 +44,6 @@ export default {
             uni.request({
                 ...options,
                 success: (result) => {
-					console.log(result);
                     // 返回原始数据
                     if(options.native){
                         return res(result)
@@ -58,10 +56,6 @@ export default {
                                 icon: 'none'
                             });
                         }
-						// token不合法，直接退出登录
-						if(result.data.data === 'Token 令牌不合法!'){
-							$store.dispatch('logout')
-						}
                         return rej(result.data) 
                     }
                     // 其他验证...
@@ -97,46 +91,4 @@ export default {
         options.method = 'DELETE'
         return this.request(options)
     },
-	// 上传文件
-	upload(url,data,onProgress = false){
-		return new Promise((result,reject)=>{
-			// 上传
-			let token = $U.getStorage('token')
-			if (!token) {
-			    uni.showToast({ title: '请先登录', icon: 'none' });
-			    // token不存在时跳转
-			    return uni.reLaunch({
-			        url: '/pages/common/login/login',
-			    });
-			}
-			
-			const uploadTask = uni.uploadFile({
-				url:this.common.baseUrl + url,
-				filePath:data.filePath,
-				name:data.name || "files",
-				header:{ token },
-				success: (res) => {
-					if(res.statusCode !== 200){
-						return uni.showToast({
-							title: '上传失败',
-							icon: 'none'
-						});
-					}
-					let message = JSON.parse(res.data)
-					result(message.data);
-				},
-				fail: (err) => {
-					console.log(err);
-					reject(err)
-				}
-			})
-			
-			uploadTask.onProgressUpdate((res) => {
-				if(typeof onProgress === 'function'){
-					onProgress(res.progress)
-				}
-			});
-			
-		})
-	}
 }
