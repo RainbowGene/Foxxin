@@ -15,54 +15,58 @@
 					<text class="font-sm text-light-muted mt-1">{{item.name}}</text>
 				</view>
 			</block>
-			<view v-if="detail.chat_type!=='user'" class="flex flex-column align-center justify-center mb-5" style="width: 150rpx;">
-				<view hover-class="bg-light" class="add-icon flex pb-2 mb-1 align-center justify-center" style="width: 120rpx;height: 120rpx;">
+			<view class="flex flex-column align-center justify-center mb-5" style="width: 150rpx;">
+				<view hover-class="bg-light" class="add-icon flex pb-2 mb-1 align-center justify-center" style="width: 120rpx;height: 120rpx;"
+				 @click="openMail">
 					<text class="text-light-muted" style="font-size: 120rpx;">+</text>
 				</view>
 			</view>
 		</view>
 		<free-divider></free-divider>
 		<view v-if="detail.chat_type!=='user'">
-			<free-list-item title="群聊名称" showRight :showLeftIcon="false">
-				<text slot="right">我是群聊名称</text>
+			<free-list-item title="群聊名称" showRight :showLeftIcon="false" @click="updateName">
+				<text slot="right">{{detail.name}}</text>
 			</free-list-item>
-			<free-list-item title="群二维码" showRight :showLeftIcon="false">
+			<free-list-item title="群二维码" showRight :showLeftIcon="false" @click="openCode">
 				<text class="font-lg text-light-muted iconfont" slot="right">&#xe60b;</text>
 			</free-list-item>
-			<free-list-item title="群公告" showRight :showLeftIcon="false"></free-list-item>
+			<free-list-item title="群公告" showRight :showLeftIcon="false" @click="openGroupRemark"></free-list-item>
 			<free-divider></free-divider>
 		</view>
 		<free-list-item title="查找聊天记录" showRight :showLeftIcon="false"></free-list-item>
 		<free-divider></free-divider>
 		<free-list-item title="消息免打扰" showRight :showRightIcon='false' :showLeftIcon="false">
-			<switch slot="right" :checked="detail.nowarn" style="transform:scale(0.9)" color="#08C060" />
+			<switch slot="right" :checked="detail.nowarn" style="transform:scale(0.9)" color="#08C060" @change="updateChatItem($event,'nowarn')" />
 		</free-list-item>
 		<free-list-item title="置顶聊天" showRight :showRightIcon='false' :showLeftIcon="false">
-			<switch slot="right" :checked="detail.istop" style="transform:scale(0.9)" color="#08C060" />
+			<switch slot="right" :checked="detail.istop" style="transform:scale(0.9)" color="#08C060" @change="updateChatItem($event,'istop')" />
 		</free-list-item>
 		<free-list-item title="强提醒" showRight :showRightIcon='false' :showLeftIcon="false">
-			<switch slot="right" :checked="detail.strongwarn" style="transform:scale(0.9)" color="#08C060" />
+			<switch slot="right" :checked="detail.strongwarn" style="transform:scale(0.9)" color="#08C060" @change="updateChatItem($event,'strongwarn')" />
 		</free-list-item>
 		<free-divider></free-divider>
 		<view v-if="detail.chat_type!=='user'">
-			<free-list-item title="我在本群的昵称" showRight :showLeftIcon="false">
-				<text slot="right" class="font-md text-light-muted">初级</text>
+			<free-list-item title="我在本群的昵称" showRight :showLeftIcon="false" @click="updateNickname">
+				<text slot="right" class="font-md text-light-muted">{{nickname}}</text>
 			</free-list-item>
 			<free-list-item title="显示群成员昵称" showRight :showLeftIcon="false" :showRightIcon='false'>
-				<switch slot="right" :checked="detail.shownickname" style="transform:scale(0.9)" color="#08C060" />
+				<switch slot="right" :checked="detail.shownickname" style="transform:scale(0.9)" color="#08C060" @change="updateChatItem($event,'shownickname')" />
 			</free-list-item>
 		</view>
 		<free-divider></free-divider>
 		<free-list-item title="设置当前聊天背景" showRight :showLeftIcon="false"></free-list-item>
 		<free-divider></free-divider>
-		<free-list-item title="清空聊天记录" showRight :showLeftIcon="false"></free-list-item>
+		<free-list-item title="清空聊天记录" showRight :showLeftIcon="false" @click="clear"></free-list-item>
 		<free-divider></free-divider>
-		<free-list-item title="投诉" showRight :showLeftIcon="false"></free-list-item>
+		<free-list-item title="投诉" showRight :showLeftIcon="false" @click="openReport"></free-list-item>
 		<free-divider></free-divider>
-		<view class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light">
+		<view class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light" @click="quit">
 			<text class="font-md text-danger">删除并退出</text>
 		</view>
-
+		<!-- 群名称修改弹出框 -->
+		<free-confirm ref="confirm" :title="'修改'+confirmTitle">
+			<input type="text" v-model="confirmText" class="border-bottom font-md" :placeholder="confirmTitle" />
+		</free-confirm>
 		<view style="height: 200rpx;"></view>
 	</view>
 </template>
@@ -72,7 +76,9 @@
 	import freeAvatar from "@/components/free-ui/free-avatar.vue"
 	import freeDivider from "@/components/free-ui/free-divider.vue"
 	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import freeConfirm from '@/components/free-ui/free-confirm.vue';
 	import auth from "@/common/mixin/auth.js"
+	import $H from "../../../common/free-lib/request.js"
 	import {
 		mapState
 	} from 'vuex'
@@ -82,11 +88,15 @@
 			freeNavBar,
 			freeAvatar,
 			freeDivider,
-			freeListItem
+			freeListItem,
+			freeConfirm
 		},
 		data() {
 			return {
 				list: [], // group
+				nickname: '', // 我在本群的昵称
+				confirmType: "name",
+				confirmText: "",
 				detail: {
 					id: 0,
 					chat_type: 'user',
@@ -104,20 +114,161 @@
 		},
 		computed: {
 			...mapState({
-				chat: state => state.user.chat
-			})
+				chat: state => state.user.chat,
+				user: state => state.user.user
+			}),
+			confirmTitle() {
+				return this.confirmType === 'name' ? '群名称' : '昵称'
+			}
 		},
 		onLoad(e) {
 			if (!e.params) return this.backToast('参数错误')
 			let detail = JSON.parse(e.params)
 			// 获取当前会话详细资料
+			// bug：如果没有产生会话（即缓存没有聊天数据）则会触发参数错误
 			detail = this.chat.getChatListItem(detail.id, detail.chat_type)
 			if (!detail) return this.backToast('参数错误')
 			this.detail = detail
-			console.log(this.detail)
+		},
+		onShow() {
+			if (this.detail.chat_type === 'group') {
+				$H.get('/group_info/' + this.detail.id).then(res => {
+					// console.log(res);
+					this.list = res.group_users.map(item => {
+						if (item.user_id === this.user.id) {
+							this.nickname = item.nickname
+						}
+						return {
+							id: item.user.user_id,
+							name: item.nickname || item.user.nickname || item.user.username,
+							avatar: item.user.avatar
+						}
+					})
+					this.detail.remark = res.remark;
+				})
+			}
 		},
 		methods: {
-
+			openMail() {
+				let params = this.detail.chat_type === 'user' ? '?type=createGroup' : '?type=inviteGroup&id=' + this.detail.id
+				uni.navigateTo({
+					url: "../../mail/mail/mail" + params
+				})
+			},
+			// 修改群名称
+			updateName() {
+				this.confirmType = 'name'
+				this.confirmText = this.detail.name
+				this.$refs.confirm.show((close) => {
+					if (this.confirmText == '') {
+						return uni.showToast({
+							title: '群名称不能为空',
+							icon: 'none'
+						});
+					}
+					$H.post('/group/rename', {
+						id: this.detail.id,
+						name: this.confirmText
+					}).then(res => {
+						uni.showToast({
+							title: '修改成功',
+							icon: 'none'
+						});
+						this.detail.name = this.confirmText
+						close()
+					})
+				})
+			},
+			// 修改我在本群的昵称
+			updateNickname() {
+				this.confirmType = 'nickname'
+				this.confirmText = this.nickname
+				this.$refs.confirm.show((close) => {
+					$H.post('/group/nickname', {
+						id: this.detail.id,
+						nickname: this.confirmText
+					}).then(res => {
+						this.nickname = this.confirmText
+						uni.showToast({
+							title: '修改成功',
+							icon: 'none'
+						});
+						close()
+					})
+				})
+			},
+			// 发布群公告
+			openGroupRemark() {
+				uni.navigateTo({
+					url: '../group-remark/group-remark?params=' + encodeURIComponent(JSON.stringify({
+						id: this.detail.id,
+						remark: this.detail.remark
+					})),
+				});
+			},
+			// 投诉群
+			openReport() {
+				uni.navigateTo({
+					url: "/pages/mail/user-report/user-report?params=" + JSON.stringify({
+						user_id: this.detail.id,
+						type: this.detail.chat_type
+					})
+				});
+			},
+			// 删除退出
+			quit() {
+				uni.showModal({
+					content: '是否退出该群聊?',
+					success: res => {
+						if (res.cancel) return;
+						$H.post('/group/quit', {
+							id: this.detail.id
+						}).then(res => {
+							uni.showToast({
+								title: '退出成功',
+								icon: 'none'
+							});
+							uni.navigateTo({
+								url: "../../tabbar/index/index"
+							})
+						})
+					}
+				})
+			},
+			// switch 框事件
+			updateChatItem(e, k) {
+				this.detail[k] = e.detail.value
+				this.chat.updateChatItem({
+					id: this.detail.id,
+					chat_type: this.detail.chat_type
+				}, this.detail)
+			},
+			// 群二维码
+			openCode() {
+				uni.navigateTo({
+					url: "../../my/cardcode/cardcode?params=" + encodeURIComponent(JSON.stringify({
+						id: this.detail.id,
+						name: this.detail.name,
+						avatar: this.detail.avatar
+					})) + '&type=group'
+				})
+			},
+			// 清空聊天记录
+			clear() {
+				uni.showModal({
+					content: '是否清空聊天记录？',
+					success: res => {
+						if (res.confirm) {
+							this.chat.clearChatDetail(this.detail.id, this.detail.chat_type)
+							uni.showToast({
+								title: '清除成功',
+								icon: 'none'
+							})
+							uni.$emit('updateHistory') // 通知，到chat.vue 去监听这个事件
+						}
+					}
+				});
+			}
 		}
 	}
 </script>

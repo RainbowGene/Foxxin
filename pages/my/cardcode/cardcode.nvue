@@ -4,15 +4,15 @@
 		<view class="p-5">
 			<view class="bg-white rounded p-4">
 				<view class="flex-row align-center mb-3">
-					<free-avatar src="/static/images/avatar/144.jpg"></free-avatar>
+					<free-avatar :src="detail.avatar||'/static/images/avatar/144.jpg'"></free-avatar>
 					<view class="pl-4 flex flex-column">
-						<text class="font-md">昵称</text>
-						<text class="font text-light-muted">地区</text>
+						<text class="font-md">{{detail.name}}</text>
+						<!-- <text class="font text-light-muted">地区</text> -->
 					</view>
 				</view>
 				<!-- 二维码 -->
 				<view class="flex align-center justify-center flex-column">
-					<image src="/static/images/avatar/144.jpg" style="width: 550rpx;height: 550prx;" lazy-load class="bg-secondary mb-3 border-bottom"></image>
+					<image :src="src" style="width: 550rpx;height: 550prx;" lazy-load class="bg-secondary mb-3 border-bottom"></image>
 					<text class="font text-light-muted">扫一扫上面的二维码，加我微信</text>
 				</view>
 			</view>
@@ -23,6 +23,10 @@
 <script>
 	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
 	import freeAvatar from "@/components/free-ui/free-avatar.vue"
+	import $C from "../../../common/free-lib/config.js"
+	import {
+		mapState
+	} from "vuex"
 	export default {
 		components: {
 			freeNavBar,
@@ -30,8 +34,24 @@
 		},
 		data() {
 			return {
-
+				src: '', // 二维码路径
+				detail: {
+					id: 0,
+					name: '',
+					avatar: ''
+				}
 			}
+		},
+		onLoad(e) {
+			if (e.params) {
+				this.detail = JSON.parse(e.params)
+				this.src = `${$C.codeUrl}/${e.type}_qrcode/${this.detail.id}?token=${this.user.token}`
+			}
+		},
+		computed: {
+			...mapState({
+				user: state => state.user.user
+			})
 		},
 		methods: {
 

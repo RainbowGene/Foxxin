@@ -1,0 +1,213 @@
+<template>
+	<view>
+		<!-- 导航栏 -->
+		<free-nav-bar title="选择" showBack :showRight="true">
+			<free-main-button :name="buttonText" slot="right" @click="submit"></free-main-button>
+		</free-nav-bar>
+		<!-- 通讯录列表：使用scroll-into-view一定要为scroll组件设置高度 -->
+		<scroll-view scroll-y="true" :style="'height:'+scrollHeight+ 'px;'" :scroll-into-view="scrollInto">
+			<block v-for="(item,i) in list" :key="i">
+				<view :id="'item-'+item.title">
+					<view v-if="item.list.length" class="py-2 px-3 border-bottom bg-light">
+						<text class="font-sm text-dark">{{item.title}}</text>
+					</view>
+					<free-list-item v-for="(item2,index2) in item.list" :key="index2" :cover="item2.avatar?item2.avatar:'/static/images/userpic.png'"
+					 :showRightIcon="false" showRight :title="item2.name" @click="selectItem(item2)">
+						<view slot="right" style="width: 35rpx;height: 35rpx;border: 1px solid grey;" class="rounded-circle flex align-center justify-center mr-4">
+							<view v-if="item2.checked" style="width: 30rpx;height: 30rpx;" class="main-bg-color rounded-circle">
+							</view>
+						</view>
+					</free-list-item>
+				</view>
+			</block>
+		</scroll-view>
+
+		<!-- 侧边导航条 -->
+		<view class="flex flex-column position-fixed right-0 bg-light" :style="'top:'+top+'px;bottom:50px;'" style="width: 40rpx;"
+		 @touchstart="touchstart" @touchmove="touchmove" @touchend="touchend">
+			<view v-for="(item,index) in list" :key="index" class="flex-1 flex-row align-center justify-center">
+				<text class="font-sm">{{item.title}}</text>
+			</view>
+		</view>
+		<!-- 大字母显示 -->
+		<view v-show="current" class="position-fixed rounded-circle bg-light flex-row align-center justify-center" style="width: 150rpx;height: 150rpx;left: 42%;top: 42%;">
+			<text class="text-white" style="font-size: 120rpx;">{{current}}</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeMainButton from "@/components/free-ui/free-main-button.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import {
+		mapState
+	} from 'vuex'
+	import $H from '@/common/free-lib/request.js'
+	export default {
+		components: {
+			freeNavBar,
+			freeMainButton,
+			freeListItem
+		},
+		data() {
+			return {
+				typeIndex: 0,
+				typeList: [{
+					name: "公开",
+					key: "all"
+				}, {
+					name: "谁可以看",
+					key: "only"
+				}, {
+					name: "不给谁看",
+					key: "except"
+				}, {
+					name: "私密",
+					key: "none"
+				}],
+				top: 0,
+				scrollHeight: 0,
+				scrollInto: '',
+				current: '',
+				selectList: [],
+				type: "",
+				limit: 9,
+				id: 0
+			}
+		},
+		computed: {
+			...mapState({
+				list: state => state.user.mailList
+			}),
+			buttonText() {
+				let text = '发送'
+				if (this.type === 'createGroup') {
+					text = '创建群组'
+				}
+				return text + ' (' + this.selectCount + ')'
+			},
+			// 每个索引的高度
+			itemHeight() {
+				let count = this.list.length
+				if (count < 1) {
+					return 0
+				}
+				return this.scrollHeight / count
+			},
+			// 选中数量
+			selectCount() {
+				return this.selectList.length
+			}
+		},
+		onLoad(e) {
+			let res = uni.getSystemInfoSync()
+			this.top = res.statusBarHeight + uni.upx2px(90)
+			this.scrollHeight = res.windowHeight - this.top
+
+			if (e.type) {
+				this.type = e.type
+			}
+			if (e.limit) {
+				this.limit = parseInt(e.limit)
+			}
+			if (e.id) {
+				this.id = e.id
+				if (e.type === 'inviteGroup') {
+					this.limit = 1
+				}
+			}
+			this.$store.dispatch('getMailList')
+		},
+		methods: {
+			touchstart(e) {
+				this.changeScrollInto(e)
+			},
+			touchmove(e) {
+				this.changeScrollInto(e)
+			},
+			touchend(e) {
+				this.current = ''
+			},
+			// 联动
+			changeScrollInto(e) {
+				let Y = e.touches[0].pageY
+				// #ifdef MP
+				Y = Y - this.top
+				// #endif
+				let index = Math.floor(Y / this.itemHeight)
+				let item = this.list[index]
+				if (item) {
+					this.scrollInto = 'item-' + item.title
+					this.current = item.title
+				}
+			},
+			// 选中事件
+			selectItem(item) {
+				if (!item.checked && this.selectCount === this.limit) {
+					return uni.showToast({
+						title: `最多选中${this.limit}项`,
+						icon: 'none'
+					});
+				}
+				item.checked = !item.checked
+				if (item.checked) { // 选中
+					this.selectList.push(item)
+				} else { // 取消选中
+					let index = this.selectList.findIndex(v => v === item)
+					if (index > -1) {
+						this.selectList.splice(index, 1)
+					}
+				}
+			},
+			// 提交事件
+			submit() {
+				if (this.selectCount === 0) {
+					return uni.showToast({
+						title: '选中项不能为0',
+						icon: 'none'
+					});
+				}
+				// 发送请求(创建群聊/群发) 或者 发送名片
+				switch (this.type) {
+					case 'createGroup':
+						// 群聊: 传user_id 组成的数组
+						$H.post('/group/create', {
+							ids: this.selectList.map(item => item.user_id)
+						}).then(res => {
+							uni.showToast({
+								title: '创建成功',
+								icon: 'success'
+							});
+							uni.navigateTo({
+								url: "../../tabbar/index/index"
+							})
+						})
+						break;
+					case 'sendCard':
+						// 发送名片
+						let item = this.selectList[0]
+						uni.$emit('sendItem', {
+							sendType: 'card',
+							data: item.name,
+							type: 'card',
+							options: {
+								from_avatar: item.avatar,
+								id: item.user_id
+							}
+						})
+						uni.navigateBack({
+							delta: 1
+						})
+						break;
+					default:
+						break;
+				}
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

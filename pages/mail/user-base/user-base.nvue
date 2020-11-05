@@ -13,7 +13,7 @@
 					<text v-if="detail.star" style="color:orange;" class="iconfont font-lg ml-1">&#xe639;</text>
 				</view>
 				<text class="font-sm text-light-muted">Fox号：{{detail.username}}</text>
-				<text class="font-sm text-light-muted">地区：广东深圳</text>
+				<!-- <text class="font-sm text-light-muted">地区：广东深圳</text> -->
 			</view>
 		</view>
 
@@ -177,9 +177,9 @@
 					if (!res) {
 						return this.backToast('该用户不存在')
 					}
-					if (res.moments && res.moments[0]) {
-						res.moments[0].image = res.moments[0].image.split(',')
-					}
+					// if (res.moments && res.moments[0]) {
+					// 	res.moments[0].image = res.moments[0].image.split(',')
+					// }
 					this.detail = res
 				})
 			},

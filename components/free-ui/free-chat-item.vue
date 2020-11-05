@@ -6,21 +6,30 @@
 		</view>
 		<!-- 撤回消息 -->
 		<view v-if="item.isremove" class="flex align-center justify-center py-2">
-			<text class="font-sm text-light-muted">你撤回了一条消息</text>
+			<text class="font-sm text-light-muted">{{isSelf?'你':'对方'}}撤回了一条消息</text>
+		</view>
+		<!-- 系统消息 -->
+		<view v-if="item.type === 'system'" class="flex align-center justify-center py-2">
+			<text class="font-sm text-light-muted px-3">{{item.data}}</text>
 		</view>
 		<!-- 主体内容 -->
-		<view v-if="!item.isremove" class="flex pt-1 position-relative" :class="isSelf?'flex-row-reverse':'flex-row'">
+		<view v-if="!item.isremove&&item.type!=='system'" class="flex pt-1 position-relative" :class="groupMainClass">
 			<view>
-				<free-avatar clickType="navigate" :src="item.form_avatar" :size="60"></free-avatar>
+				<!-- 这里群聊点击头像进入不了详细信息页，因为 from_id 为群组id而不是个人id -->
+				<free-avatar clickType="navigate" :id="item.from_id" :src="item.form_avatar" :size="60"></free-avatar>
 			</view>
-			<text v-if="item.type!=='emoticon'&&item.type!=='img'&&item.type!=='video'" class="iconfont position-absolute font-lg"
+			<text v-if="item.type!=='emoticon'&&item.type!=='image'&&item.type!=='video'&&item.type!=='card'" class="iconfont position-absolute font-lg"
 			 :class="isSelf?'text-chat-item chat-right-icon':'chat-left-icon text-white'">{{isSelf?'&#xe61c;':'&#xe6a7;'}}</text>
+			<!-- 昵称部分 -->
+			<view v-if="shownickname" class="px-2 pt-1 position-absolute" :style="groupStyle">
+				<text class="font-sm text-muted">{{item.from_name}}</text>
+			</view>
 			<!-- 长按弹出操作菜单 -->
 			<div @longpress="longClick" :style="labelStyle" style="max-width: 500rpx;" class="rounded px-2 py-1" :class="labelClass">
-				<!-- 文字 -->
-				<text v-if="item.type==='text'" class="font-md">{{item.data}}</text>
+				<!-- 文字  *:word-break:break-all; 解决英文数字不换行的问题 -->
+				<text v-if="item.type==='text'" style="word-break:break-all;" class="font-md">{{item.data}}</text>
 				<!-- 表情 -->
-				<free-image v-else-if="item.type==='emoticon' || item.type==='img'" @click="preview(item)" :src="item.data"
+				<free-image v-else-if="item.type==='emoticon' || item.type==='image'" @click="preview(item)" :src="item.data"
 				 imageClass="rounded" :maxHeight="250" :maxWidth="350"></free-image>
 				<!-- 音频 -->
 				<view v-else-if="item.type==='audio'" :class="isSelf?'flex-row':'flex-row-reverse'" class="flex align-center justify-end"
@@ -33,6 +42,16 @@
 				<view v-else-if="item.type==='video'" class="position-relative rounded">
 					<free-image :src="item.options.poster" imageClass="rounded bg-hover-light" :maxHeight="250" :maxWidth="350" @load="loadPoster"></free-image>
 					<text @click="openVideo" class="iconfont position-absolute text-white" style="font-size: 80rpx;" :style="posterIconStyle">&#xe62e;</text>
+				</view>
+				<!-- 名片 -->
+				<view v-else-if="item.type ==='card'" class="bg-white" style="width: 400rpx;" @click="openUserBase">
+					<view class="p-3 flex flex-row align-center border-bottom border-light-secondary" hover-class="bg-light">
+						<free-avatar size="70" :src="item.options.from_avatar" clickType="navigate"></free-avatar>
+						<text class="font ml-2">{{item.data}}</text>
+					</view>
+					<view class="flex align-center p-2">
+						<text class="font-sm text-muted">个人名片</text>
+					</view>
 				</view>
 			</div>
 		</view>
@@ -81,6 +100,12 @@
 			...mapState({
 				user: state => state.user.user
 			}),
+			groupMainClass() {
+				let cls = ''
+				cls += this.isSelf ? 'flex-row-reverse' : 'flex-row'
+				cls += this.shownickname ? ' mt-1' : ''
+				return cls
+			},
 			// 发送者是否本人
 			isSelf() {
 				// 获取本人id
@@ -112,6 +137,10 @@
 					width = width <= 80 ? 80 : width
 					return `width:${width}rpx;`
 				}
+			},
+			// 群聊昵称位置
+			groupStyle() {
+				return (this.isSelf ? 'right:80rpx;' : 'left:80rpx;') + 'top:-30rpx;'
 			}
 		},
 		mounted() {
@@ -168,7 +197,7 @@
 			},
 			// 图片预览
 			preview(item) {
-				if (item.type !== 'img') return;
+				if (item.type !== 'image') return;
 				// 确认图片，可以预览
 				this.$emit('preview', this.item.data) // 这里传过去的是路径
 			},
@@ -214,6 +243,12 @@
 				uni.navigateTo({
 					url: "../../pages/chat/video/video?url=" + this.item.data
 				})
+			},
+			// 打开名片
+			openUserBase() {
+				uni.navigateTo({
+					url: '../../pages/mail/user-base/user-base?user_id=' + this.item.options.id
+				});
 			}
 		}
 	}
@@ -228,5 +263,15 @@
 	.chat-right-icon {
 		right: 70rpx;
 		top: 18rpx;
+	}
+
+	.chat-left-icon-group {
+		left: 70rpx;
+		top: 40rpx;
+	}
+
+	.chat-right-icon-group {
+		right: 70rpx;
+		top: 40rpx;
 	}
 </style>

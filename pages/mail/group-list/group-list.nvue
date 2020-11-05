@@ -1,0 +1,84 @@
+<template>
+	<view class="page">
+		<freeNavBar title="群聊列表" showBack :showRight="false"></freeNavBar>
+		<free-list-item v-for="(item,index) in list" :key="index" :title="item.name" :cover="item.avatar ||'/static/images/userpic.png'"
+		 @click="handleItem(item)" showRight :showRightIcon="false">
+		</free-list-item>
+		<!-- 上拉加载 -->
+		<view v-if="list.length>=10" class="flex-row align-center justify-center py-3 bg-light">
+			<text class="text-light-muted font">{{loadmore}}</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeListItem from "@/components/free-ui/free-list-item.vue"
+	import $H from "@/common/free-lib/request.js"
+	import auth from "@/common/mixin/auth.js"
+	import {
+		mapState
+	} from "vuex"
+	export default {
+		mixins: [auth],
+		components: {
+			freeNavBar,
+			freeListItem
+		},
+		data() {
+			return {
+				loadmore: '上拉加载更多', //'加载中...'  '没有更多了'
+				page: 1,
+				list: []
+			}
+		},
+		onShow() {
+			this.page = 1
+			$H.get('/group/' + this.page).then(res => {
+				this.list = res
+			})
+		},
+		// 监听下拉刷新
+		onPullDownRefresh() {
+			this.page = 1
+			this.loadmore = '上拉加载更多'
+			$H.get('/group/' + this.page).then(res => {
+				this.list = res
+				uni.showToast({
+					title: '刷新成功!',
+					icon: "none"
+				})
+				uni.stopPullDownRefresh()
+			})
+		},
+		// 监听触底事件
+		onReachBottom() {
+			if (this.loadmore !== '上拉加载更多') return;
+			this.loadmore = '加载中...'
+			this.page += 1;
+			$H.get('/group/' + this.page).then(res => {
+				this.list = [...this.list, ...res]
+				this.loadmore = this.list.length == this.page * 10 ? '上拉加载更多' : '没有更多了'
+			}).catch(err => {
+				this.page -= 1
+				this.loadmore = '上拉加载更多'
+			})
+		},
+		methods: {
+			handleItem(item) {
+				uni.navigateTo({
+					url: "/pages/chat/chat?params=" + encodeURIComponent(JSON.stringify({
+						id: item.id,
+						name: item.name,
+						avatar: item.avatar,
+						chat_type: 'group'
+					}))
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

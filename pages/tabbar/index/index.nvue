@@ -10,11 +10,11 @@
 		</view> -->
 		<block v-for="(item,index) in list" :key="index">
 			<!-- 置顶列表 -->
-			<free-media-list v-if="item.istop" :item="item" :index="index" @click="itemClick" @clickLong="clickLong"></free-media-list>
+			<free-media-list v-if="item.istop" :item="item" :index="index" @clickLong="clickLong"></free-media-list>
 		</block>
 		<!-- 非置顶列表 -->
 		<block v-for="(item,index) in list" :key="index">
-			<free-media-list v-if="!item.istop" :item="item" :index="index" @click="itemClick" @clickLong="clickLong"></free-media-list>
+			<free-media-list v-if="!item.istop" :item="item" :index="index" @clickLong="clickLong"></free-media-list>
 		</block>
 		<!-- 列表长按弹出层 -->
 		<free-popup ref="extend" :bodyW="240" :bodyH="menuHeight">
@@ -57,9 +57,6 @@
 				]
 			}
 		},
-		onLoad() {
-
-		},
 		computed: {
 			...mapState({
 				list: state => state.user.chatList,
@@ -74,18 +71,18 @@
 			}
 		},
 		methods: {
-			// 进入聊天
-			itemClick(index) {
-				console.log(index)
-			},
 			// 长按弹出
-			clickLong(obj) {
-				let {
-					x,
-					y
-				} = obj
-				this.propIndex = obj.index // 用于长按菜单操作
-				this.menus[0].name = this.list[this.propIndex].istop ? '取消置顶' : '设为置顶'
+			clickLong({
+				x,
+				y,
+				index
+			}) {
+				// 初始化 索引
+				this.propIndex = index
+				// 拿到当前对象
+				let item = this.list[index]
+				// 判断之前是否处于置顶状态
+				this.menus[0].name = item.istop ? '取消置顶' : '设为置顶'
 				this.$refs.extend.show(x, y)
 			},
 			// 分发菜单事件

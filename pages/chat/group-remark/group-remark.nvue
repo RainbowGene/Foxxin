@@ -1,0 +1,56 @@
+<template>
+	<!-- 用户投诉页 -->
+	<view class="page">
+		<freeNavBar title="群公告" showBack bgColor="bg-white">
+			<free-main-button slot="right" @click="submit" name="推送"></free-main-button>
+		</freeNavBar>
+		<textarea style="width: 750rpx;" v-model="remark" placeholder="请填写群公告" class="bg-white p-2 font-md" />
+		</view>
+</template>
+
+<script>
+	import freeNavBar from "@/components/free-ui/free-nav-bar.vue"
+	import freeMainButton from "@/components/free-ui/free-main-button.vue"
+	import auth from "@/common/mixin/auth.js"
+	import $H from "@/common/free-lib/request.js"
+	export default {
+		mixins:[auth],
+		components: {
+			freeNavBar,
+			freeMainButton
+		},
+		data() {
+			return {
+				id:0, // 群组id
+				remark:''
+			}
+		},
+		onLoad(e) {
+			if(!e.params) return this.backToast('参数错误')
+			let params = JSON.parse(e.params)
+			this.id = params.id
+			this.remark = params.remark
+		},
+		methods: {
+			// 提交群公告
+			submit(){
+				$H.post('/group/remark',{
+					id:this.id,
+					remark:this.remark
+				}).then(res=>{
+					uni.showToast({
+						title: '群公告发布成功',
+						icon: 'none'
+					});
+					uni.navigateBack({
+						delta:1
+					})
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>

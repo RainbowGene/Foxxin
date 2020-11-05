@@ -25,6 +25,9 @@
 	import freeAvatar from "@/components/free-ui/free-avatar.vue"
 	import freeListItem from "@/components/free-ui/free-list-item.vue"
 	import freeConfirm from "@/components/free-ui/free-confirm.vue"
+	import {
+		mapState
+	} from "vuex"
 	export default {
 		components: {
 			freeNavBar,
@@ -34,19 +37,17 @@
 		},
 		data() {
 			return {
-				user: {
-					avatar: '/static/images/avatar/144.jpg',
-					nickname: 'Gene',
-					username: '1767386755'
-				},
 				confirmText: "",
 				confirmType: '',
 			}
 		},
-		comments: {
+		computed: {
+			...mapState({
+				user: state => state.user.user
+			}),
 			confirmTitle() {
 				return this.confirmType === 'username' ? '修改账号' : '修改昵称'
-			}
+			},
 		},
 		methods: {
 			update(type) {
@@ -77,9 +78,13 @@
 						break;
 				}
 			},
-			openCode(){
+			openCode() {
 				uni.navigateTo({
-					url:"../cardcode/cardcode"
+					url: "../cardcode/cardcode?params=" + encodeURIComponent(JSON.stringify({
+						id: this.user.id,
+						name: this.user.nickname || this.user.username,
+						avatar: this.user.avatar
+					})) + '&type=user'
 				})
 			}
 		}

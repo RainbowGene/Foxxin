@@ -4,13 +4,13 @@
 			<free-icon-btn slot="right" @click="btnMore">&#xe615;</free-icon-btn>
 		</free-nav-bar>
 		<!-- 聊天内容 -->
-		<scroll-view scroll-y :scroll-top="slideBottom" :show-scrollbar="false" class="bg-light position-fixed left-0 right-0 px-3"
-		 :style="scrollStyle">
-			<!-- 内容列表组件 -->
-			<block v-for="(item,index) in list" :key="index">
+		<scroll-view scroll-y :show-scrollbar="false" class="bg-light position-fixed left-0 right-0 px-3" :style="scrollStyle"
+		 :scroll-into-view="scrollIntoView" :scroll-with-animation="true">
+			<!-- 内容列表组件: 使用定位跳转到底部 'chatItem_'+index -->
+			<view v-for="(item,index) in list" :key="index" :id="'chatItem_'+index">
 				<free-chat-item ref="chatItem" :item="item" :index="index" :pretime="index>0?list[index-1].create_time:0"
-				 @clickLong="chickLong" @preview="previewImg"></free-chat-item>
-			</block>
+				 @clickLong="chickLong" @preview="previewImg" :shownickname="currentChatItem.shownickname"></free-chat-item>
+			</view>
 		</scroll-view>
 
 		<!-- 这个div的方法：点击以上的部分页面，可以收起键盘
@@ -18,7 +18,7 @@
 		<div v-show="mode==='action' || mode === 'emoticon'" class="position-fixed top-0 right-0 left-0 bottom-0" @click="clickPage"></div>
 
 		<!-- 气泡弹出层 -->
-		<free-popup ref="extend" :bodyW="240" :bodyH="menuHeight" :tabHeight="90">
+		<free-popup ref="extend" :bodyW="240" :bodyH="450" :tabHeight="90">
 			<view class="popup-content" :style='menuStyle'>
 				<view class="pl-3 flex-1" hover-class="bg-light" v-for="(item,index) in getMenus" :key="index" @click="clickEvent(item.event)">
 					<text>{{item.name}}</text>
@@ -85,6 +85,7 @@
 		mapMutations
 	} from "vuex"
 	import $H from "@/common/free-lib/request.js"
+	import $U from "@/common/free-lib/util.js"
 	export default {
 		mixins: [auth],
 		components: {
@@ -98,7 +99,7 @@
 			return {
 				mode: 'text', // 默认是输入文字模式text / audio / emoticon / action
 				text: '', // 输入文字
-				slideBottom: 10000, // scrollview 默认滑动距离
+				scrollIntoView: '', //位置:用于跳转底部
 				KeyboardHeight: 0, // 软键盘高度
 				navBarHeight: 0,
 				propIndex: -1, // 当前操作的气泡索引
@@ -111,39 +112,7 @@
 					avatar: '',
 					chat_type: 'user'
 				},
-				menus: [{
-						name: '复制',
-						event: ''
-					},
-					{
-						name: '发送给朋友',
-						event: ''
-					},
-					{
-						name: '收藏',
-						event: ''
-					},
-					// {
-					// 	name: '提醒',
-					// 	event: ''
-					// },
-					// {
-					// 	name: '翻译',
-					// 	event: ''
-					// },
-					{
-						name: '删除',
-						event: ''
-					},
-					{
-						name: '多选',
-						event: ''
-					},
-					{
-						name: '撤回',
-						event: 'removeChatItem'
-					}
-				],
+				menus: [],
 				emoticonlist: [],
 				actionlist: [ // 拓展菜单列表
 					[{
@@ -179,12 +148,12 @@
 						{
 							icon: '/static/images/extends/shoucan.png',
 							name: '我的收藏',
-							event: ''
+							event: 'openFava'
 						},
 						{
 							icon: '/static/images/extends/man.png',
 							name: '名片',
-							event: ''
+							event: 'sendCard'
 						}
 					]
 				],
@@ -193,11 +162,21 @@
 		},
 		computed: {
 			...mapState({
+				chatList: state => state.user.chatList,
 				RECORD: state => state.audio.RECORD,
 				RecordTime: state => state.audio.RecordTime,
 				chat: state => state.user.chat,
-				totalNoreadnum: state => state.user.totalNoreadnum
+				totalNoreadnum: state => state.user.totalNoreadnum,
+				user: state => state.user.user
 			}),
+			// 当前会话配置信息
+			currentChatItem() {
+				let index = this.chatList.findIndex(item => item.id === this.detail.id && item.chat_type === this.detail.chat_type)
+				if (index !== -1) {
+					return this.chatList[index]
+				}
+				return {}
+			},
 			scrollStyle() {
 				return `bottom: ${uni.upx2px(90)+this.KeyboardHeight}px;top: ${this.navBarHeight}px;`
 			},
@@ -230,7 +209,7 @@
 			imgList() {
 				let arr = []
 				this.list.forEach(item => {
-					if (item.type === 'img') {
+					if (item.type === 'image') {
 						arr.push(item.data)
 					}
 				})
@@ -239,24 +218,27 @@
 		},
 		onLoad(e) {
 			if (!e.params) return this.backToast('参数错误!');
-			this.detail = JSON.parse(e.params)
+			this.detail = JSON.parse(decodeURIComponent(e.params))
 			this.__init();
 			// 创建聊天对象
 			this.chat.createChatObject(this.detail)
-			// 获取历史记录渲染页面
+			// 获取历史聊天记录渲染页面
 			this.list = this.chat.getChatDetail()
 			// 监听接收聊天信息
-			uni.$on('onMessage', (message) => {
-				if (message.from_id === this.detail.id && message.chat_type === this.detail.chat_type) {
-					this.list.push(message)
-				}
-			})
+			uni.$on('onMessage', this.onMessage)
+			// 开启监听 清空聊天记录事件
+			uni.$on('updateHistory', this.updateHistory)
+
+			// 开启监听发送收藏 from my/userfava
+			uni.$on('sendItem', this.onSendItem)
 		},
 		destroyed() {
 			// 销毁聊天对象
 			this.chat.destoryChatObject()
 			// 销毁聊天对象
-			uni.$off('onMessage', () => {})
+			uni.$off('onMessage', this.onMessage)
+			uni.$off('updateHistory', this.updateHistory)
+			uni.$off('sendItem', this.onSendItem)
 		},
 		mounted() {
 			var statusBarHeight = 0
@@ -301,13 +283,53 @@
 					}
 				}
 				this.emoticonlist = arr
+
+				// 初始化会话列表
+				this.chat.initChatListItem({
+					chat_type: this.detail.chat_type,
+					to_id: this.detail.id,
+					to_name: this.detail.name,
+					to_avatar: this.detail.avatar,
+					data: this.detail.chat_type === 'user' ? '你们已经是好友，可以开始聊天了' : '你已经加入群聊，可以开始聊天了'
+				})
+			},
+			onSendItem(e) {
+				if (e.sendType === 'fava' || e.sendType === 'card') {
+					this.send(e.type, e.data, e.options)
+				}
+			},
+			// 
+			onMessage(message) {
+				console.log('[聊天页] 监听接收聊天信息', message);
+				if ((message.from_id === this.detail.id && message.chat_type === 'user') || (message.chat_type === 'group' &&
+						message.to_id === this.detail.id)) {
+					if (message.isremove !== 1) {
+						this.list.push(message)
+						// 置于底部
+						return this.scrollToBottom()
+					}
+					// 撤回消息
+					let index = this.list.findIndex(item => item.id === message.id)
+					if (index !== -1) {
+						this.list[index].isremove = 1
+					}
+				}
+				// 置于底部
+				return this.scrollToBottom()
+			},
+			updateHistory(isclear = true) {
+				if (isclear) {
+					this.list = []
+				} else {
+					this.list = this.chat.getChatDetail()
+				}
 			},
 			// 发送消息
 			send(type, data = '', options = {}) {
 				// 组织数据格式
 				switch (type) {
 					case 'text':
-						data = this.text
+						data = data || this.text
 						break;
 				}
 				let message = this.chat.formatSendData({
@@ -318,9 +340,17 @@
 				// 渲染到页面
 				let index = this.list.length // 拿到数组长度
 				this.list.push(message)
+				// 监听上传进度
+				let onProgress = false
+				if (message.type !== 'text' && message.type !== 'emoticon' && message.type !== 'card' && !message.data.startsWith(
+						'http')) {
+					onProgress = (progress) => {
+						console.log('上传进度' + progress)
+					}
+				}
 				// 发送到服务端
-				this.chat.send(message).then(res => {
-					console.log(res)
+				this.chat.send(message, onProgress).then(res => {
+					// console.log(res)
 					this.list[index].id = res.id
 					this.list[index].sendStatus = 'success'
 				}).catch(err => {
@@ -328,30 +358,121 @@
 					this.list[index].sendStatus = 'fail'
 				})
 				if (type === 'text') this.text = ''
-				// 置于底部
-				setTimeout(() => {
-					this.scrollToBottom()
-				}, 200)
+				// 滑到底部
+				this.scrollToBottom()
 			},
 			// 长按气泡
-			chickLong(e) {
-				const {
-					x,
-					y,
-					index
-				} = e
-				// console.log(e)
+			chickLong({
+				x,
+				y,
+				index
+			}) {
 				this.propIndex = index
+				// 组装菜单
+				let menusList = [{
+					name: "发送给朋友",
+					event: 'sendToChatItem'
+				}, {
+					name: "收藏",
+					event: 'fava'
+				}, {
+					name: "删除",
+					event: 'delete'
+				}]
+				let item = this.list[this.propIndex]
+				let isSelf = this.user.id === item.from_id
+				if (isSelf) {
+					menusList.push({
+						name: "撤回",
+						event: 'removeChatItem'
+					})
+				}
+				// #ifndef H5
+				if (item.type === 'text') {
+					menusList.unshift({
+						name: "复制",
+						event: 'copy',
+					})
+				}
+				// #endif
+				this.menus = menusList
 				this.$refs.extend.show(x, y)
 			},
-			clickEvent(func) {
-				switch (func) {
+			// 操作菜单分发
+			clickEvent(event) {
+				let item = this.list[this.propIndex]
+				let isSelf = this.user.id === item.from_id
+				switch (event) {
 					case 'removeChatItem':
 						// 消息撤回
-						this.list[this.propIndex].isremove = true
+						this.chat.recall(item).then(res => {
+							item.isremove = 1
+						})
+						break;
+					case 'sendToChatItem':
+						uni.navigateTo({
+							url: 'chat-list/chat-list?params=' + encodeURIComponent(JSON.stringify(item))
+						})
+						break;
+					case 'copy': // 复制:不支持h5
+						uni.setClipboardData({
+							data: item.data,
+							success: () => {
+								uni.showToast({
+									title: '复制成功',
+									icon: 'none'
+								});
+							}
+						});
+						break;
+					case 'delete':
+						uni.showModal({
+							content: '是否删除该条?',
+							success: res => {
+								if (!res.confirm) return;
+								this.chat.deleteChatDetailItem(item, isSelf)
+								this.list.splice(this.propIndex, 1)
+								// 删除最后一条消息
+								if (this.list.length === this.propIndex) {
+									this.chat.updateChatItem({
+										id: this.detail.id,
+										chat_type: this.detail.chat_type
+									}, (v) => {
+										let o = this.list[this.propIndex - 1]
+										let data = ''
+										if (o) {
+											data = this.chat.formatChatItemData(o, isSelf)
+										}
+										v.data = data
+										return v
+									})
+								}
+							}
+						});
+						break;
+					case 'fava':
+						uni.showModal({
+							content: '是否要加入收藏？',
+							success: (res) => {
+								if (res.confirm) {
+									$H.post('/fava/create', {
+										type: item.type,
+										data: item.data,
+										options: JSON.stringify(item.options)
+									}).then(res => {
+										uni.showToast({
+											title: '加入收藏成功',
+											icon: 'none'
+										});
+									})
+								}
+							}
+						});
+						break;
+					default:
 						break;
 				}
-				this.$refs.extend.hidden()
+				this.$refs.extend.hidden() // 关闭菜单
 			},
 			// 回到底部
 			scrollToBottom() {
@@ -363,21 +484,24 @@
 				}
 				// #endif
 				// #ifdef H5
-				this.slideBottom += 500
+				setTimeout(() => {
+					this.scrollIntoView = 'chatItem_' + (this.list.length - 1)
+				}, 300)
 				// #endif
 			},
 			// 右上角更多按钮
 			btnMore() {
 				// 进入设置页
 				uni.navigateTo({
-					url: './chat-set/chat-set?params=' + JSON.stringify({
+					url: '/pages/chat/chat-set/chat-set?params=' + JSON.stringify({
 						id: this.detail.id,
-						chat_type: this.detail.chat_type
-					})
+						chat_type: this.detail.chat_type,
+						name: this.detail.name
+					}),
 				});
 			},
 			// 打开底部拓展菜单
-			openAction(type) {
+			openAction(type = 'action') {
 				this.mode = type // 模式切换
 				// 收起键盘
 				uni.hideKeyboard()
@@ -395,7 +519,7 @@
 								// 发送到服务器
 								// 渲染页面
 								res.tempFilePaths.forEach(item => {
-									this.send('img', item) // 当做表情包处理
+									this.send('image', item) // 当做表情包处理
 								})
 							}
 						})
@@ -409,10 +533,21 @@
 							success: (res) => {
 								// 发送到服务器(获取封面,返回封面及视频url)
 								// 渲染页面
-								console.log(e)
 								this.send('video', res.tempFilePath)
 							}
 						})
+						break;
+					case 'openFava':
+						uni.navigateTo({
+							url: "../my/userfava/userfava?type=send"
+						})
+						break;
+					case 'sendCard':
+						uni.navigateTo({
+							url: "../mail/mail/mail?type=sendCard&limit=1"
+						})
+						break;
+					default:
 						break;
 				}
 			},

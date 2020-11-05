@@ -59,19 +59,19 @@
 				letterName: '',
 				maillist: [{
 						id: 'group',
-						cover: '../../../static/images/mail/group.png',
+						cover: '/static/images/mail/group.png',
 						title: '群聊',
-						path: ""
+						path: "mail/group-list/group-list"
 					},
 					{
 						id: 'friend',
-						cover: '../../../static/images/mail/friend.png',
+						cover: '/static/images/mail/friend.png',
 						title: '新的朋友',
 						path: "mail/aplly-list/aplly-list"
 					},
 					{
 						id: 'tag',
-						cover: '../../../static/images/mail/tag.png',
+						cover: '/static/images/mail/tag.png',
 						title: '标签',
 						path: ""
 					}
@@ -83,7 +83,7 @@
 			this.topHeight = res.statusBarHeight + uni.upx2px(90)
 			this.scrollHeight = res.windowHeight - this.topHeight
 
-			this.$store.dispatch('getMailList')
+			this.$store.dispatch('getMailList') // 获取通讯录列表
 		},
 		computed: {
 			...mapState({

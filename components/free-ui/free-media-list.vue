@@ -10,7 +10,7 @@
 					<text class="font-md">{{item.name}}</text>
 					<text class="text-muted font-sm">{{item.update_time|formatTime}}</text>
 				</view>
-				<text class="text-muted font-sm">{{item.data}}</text>
+				<text class="text-muted font-sm">{{item.data|formatData}}</text>
 			</view>
 		</div>
 	</view>
@@ -38,16 +38,22 @@
 				chat: state => state.user.chat
 			})
 		},
+		filters: {
+			formatData(data) {
+				let fdata = data.slice(0, 15) + '...'
+				return data.length >= 20 ? fdata : data
+			}
+		},
 		methods: {
 			onClick() {
 				uni.navigateTo({
-					url: "../../chat/chat?params=" + encodeURIComponent(JSON.stringify({
+					url: '/pages/chat/chat?params=' + encodeURIComponent(JSON.stringify({
 						id: this.item.id,
 						name: this.item.name,
 						avatar: this.item.avatar,
-						chat_type: this.item.chat_type
-					}))
-				})
+						chat_type: this.item.chat_type,
+					})),
+				});
 				this.chat.readChatItem(this.item.id, this.item.chat_type)
 			},
 			longClick(e) {

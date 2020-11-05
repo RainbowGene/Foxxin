@@ -55,7 +55,9 @@
 			"style": {}
 		}, {
 			"path": "pages/my/userfava/userfava",
-			"style": {}
+			"style": {
+				"enablePullDownRefresh": true
+			}
 		}, {
 			"path": "pages/compage/search/search",
 			"style": {}
@@ -73,6 +75,20 @@
 			"style": {
 				"enablePullDownRefresh": true
 			}
+		}, {
+			"path": "pages/mail/mail/mail",
+			"style": {}
+		}, {
+			"path": "pages/mail/group-list/group-list",
+			"style": {
+				"enablePullDownRefresh": true
+			}
+		}, {
+			"path": "pages/chat/group-remark/group-remark",
+			"style": {}
+		}, {
+			"path": "pages/chat/chat-list/chat-list",
+			"style": {}
 		}
 	],
 	"globalStyle": {

@@ -27,7 +27,8 @@
 		<!-- 拓展菜单 -->
 		<free-popup ref="extend" border bodyBgColor="bg-dark" :bodyW="290" :bodyH="525">
 			<view class="flex-column" style='height: 525rpx;width: 290rpx;'>
-				<view class="flex-1 justify-center pl-3" hover-class="bg-hover-dark" v-for="(item,index) in menus" :key="index" @click="clickEvent(item.event)">
+				<view class="flex-1 justify-center pl-3" hover-class="bg-hover-dark" v-for="(item,index) in menus" :key="index"
+				 @click="clickEvent(item.event)">
 					<text class="iconfont text-white font-md" v-html="item.icon+' '+item.name"></text>
 				</view>
 			</view>
@@ -96,9 +97,9 @@
 				type: Boolean,
 				default: true
 			},
-			backEvent:{
-				type:Boolean,
-				default:true
+			backEvent: {
+				type: Boolean,
+				default: true
 			}
 		},
 		components: {
@@ -107,26 +108,24 @@
 		},
 		// 组件中不能使用onLoad
 		mounted() {
-			// #ifdef H5
-			// this.navBarHeight = this.statusBarHeight + uni.upx2px(90) // 90rpx高度转为px
-			// #endif
 			// #ifdef APP-PLUS-NVUE
 			this.statusBarHeight = plus.navigator.getStatusbarHeight()
 			// #endif
+			this.navBarHeight = this.statusBarHeight + uni.upx2px(90)
 		},
 		computed: {
 			fixedStyle() {
 				return `height:${this.navBarHeight}px`
 			},
 			getClass() {
-				let fixed = this.fixed ? 'fixed-top-bar' : ''
+				let fixed = this.fixed ? 'fixed-top' : ''
 				return `${fixed} ${this.bgColor}`
 			}
 		},
 		methods: {
 			searchHandle() {
 				uni.navigateTo({
-					url:"/pages/compage/search/search"
+					url: "/pages/compage/search/search"
 				})
 			},
 			addHandle() {
@@ -134,7 +133,7 @@
 				this.$refs.extend.show(uni.upx2px(445), uni.upx2px(100))
 			},
 			back() {
-				if(this.backEvent){
+				if (this.backEvent) {
 					return uni.navigateBack({
 						delta: 1
 					})

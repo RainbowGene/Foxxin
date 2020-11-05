@@ -20,6 +20,10 @@
 			clickType: {
 				type: String,
 				default: null
+			},
+			id: {
+				type: Number,
+				default: 0
 			}
 		},
 		computed: {
@@ -32,8 +36,9 @@
 			toMail() {
 				switch (this.clickType) {
 					case 'navigate':
+						console.log(this.id)
 						uni.navigateTo({
-							url: "/pages/mail/user-base/user-base"
+							url: "/pages/mail/user-base/user-base?user_id=" + this.id
 						})
 						break;
 					default:
