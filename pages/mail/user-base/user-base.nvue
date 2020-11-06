@@ -168,6 +168,11 @@
 						user_id: this.detail.id,
 						type: 'user'
 					})
+				}, {
+					title: 'delete',
+					icon: '&#xe63c;',
+					type: 'event',
+					event: "deleteItem"
 				}]
 			}
 		},
@@ -219,6 +224,26 @@
 					star
 				}).then(res => {
 					this.detail.star = star
+				})
+			},
+			// delete
+			deleteItem() {
+				uni.showModal({
+					content: '是否删除该好友?',
+					success: (res) => {
+						if (!res.confirm) return;
+						$H.post('/friend/destroy', {
+							friend_id: this.detail.id
+						}).then(res => {
+							uni.showToast({
+								title: '删除成功',
+								icon: 'none'
+							});
+							uni.reLaunch({
+								url: "../../tabbar/index/index"
+							})
+						})
+					}
 				})
 			},
 			// 加入黑名单

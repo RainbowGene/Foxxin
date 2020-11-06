@@ -60,7 +60,8 @@
 		<free-divider></free-divider>
 		<free-list-item title="投诉" showRight :showLeftIcon="false" @click="openReport"></free-list-item>
 		<free-divider></free-divider>
-		<view class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light" @click="quit">
+		<view v-if="detail.chat_type ==='group'" class="py-3 flex-row align-center justify-center bg-white" hover-class="bg-light"
+		 @click="quit">
 			<text class="font-md text-danger">删除并退出</text>
 		</view>
 		<!-- 群名称修改弹出框 -->

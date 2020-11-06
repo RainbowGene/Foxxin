@@ -8,7 +8,7 @@
 		<free-list-item title="昵称" showRight :showLeftIcon="false" @click="update('nickname')">
 			<text slot="right" class="font-md text-light-muted">{{user.nickname}}</text>
 		</free-list-item>
-		<free-list-item title="账号" showRight :showLeftIcon="false" @click="update('username')">
+		<free-list-item title="账号" showRight :showLeftIcon="false">
 			<text slot="right" class="font-md text-light-muted">{{user.username}}</text>
 		</free-list-item>
 		<free-list-item title="二维码名片" showRight :showLeftIcon="false" @click="openCode">
@@ -25,6 +25,8 @@
 	import freeAvatar from "@/components/free-ui/free-avatar.vue"
 	import freeListItem from "@/components/free-ui/free-list-item.vue"
 	import freeConfirm from "@/components/free-ui/free-confirm.vue"
+	import $H from "@/common/free-lib/request.js"
+	import $store from "@/store/modules/user.js"
 	import {
 		mapState
 	} from "vuex"
@@ -58,7 +60,24 @@
 							sizeType: ['compressed'],
 							success: res => {
 								// 上传服务器
-								this.user.avatar = res.tempFilePaths[0]
+								$H.upload('/upload', {
+									filePath: res.tempFilePaths[0]
+								}).then(url => {
+									this.user.avatar = url;
+									$H.post('/user/update', {
+										avatar: url,
+										nickname: this.user.nickname
+									}).then(res => {
+										uni.showToast({
+											title: '修改成功！',
+											icon: 'none'
+										});
+										this.$store.commit('updateUser', {
+											k: 'avatar',
+											v: url
+										})
+									})
+								})
 							}
 						})
 						break;
@@ -66,13 +85,25 @@
 						this.confirmType = type
 						this.confirmText = this.user[type]
 						this.$refs.confirm.show((close) => {
-							if (this.confirmText) {
-								this.user[type] = this.confirmText
+							if (this.confirmText === '') {
+								return uni.showToast({
+									title: '不能为空',
+									icon: 'none'
+								});
+							}
+							$H.post('/user/update', {
+								avatar: this.user.avatar,
+								nickname: this.confirmText
+							}).then(res => {
+								this.$store.commit('updateUser', {
+									k: 'nickname',
+									v: this.confirmText
+								})
 								uni.showToast({
 									title: '修改成功',
-									icon: "none"
-								})
-							}
+									icon: 'none'
+								});
+							})
 							close()
 						})
 						break;

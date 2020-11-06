@@ -179,8 +179,8 @@
 								title: '创建成功',
 								icon: 'success'
 							});
-							uni.navigateTo({
-								url: "../../tabbar/index/index"
+							uni.reLaunch({
+								url: "/tabbar/index/index"
 							})
 						})
 						break;

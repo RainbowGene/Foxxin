@@ -16,7 +16,8 @@
 		<view v-if="!item.isremove&&item.type!=='system'" class="flex pt-1 position-relative" :class="groupMainClass">
 			<view>
 				<!-- 这里群聊点击头像进入不了详细信息页，因为 from_id 为群组id而不是个人id -->
-				<free-avatar clickType="navigate" :id="item.from_id" :src="item.form_avatar" :size="60"></free-avatar>
+				<!-- <free-avatar clickType="navigate" :id="item.from_id" :src="item.from_avatar" :size="65"></free-avatar> -->
+				<free-avatar @click="openUser" :id="item.from_id" :src="item.from_avatar" :size="65"></free-avatar>
 			</view>
 			<text v-if="item.type!=='emoticon'&&item.type!=='image'&&item.type!=='video'&&item.type!=='card'" class="iconfont position-absolute font-lg"
 			 :class="isSelf?'text-chat-item chat-right-icon':'chat-left-icon text-white'">{{isSelf?'&#xe61c;':'&#xe6a7;'}}</text>
@@ -248,6 +249,12 @@
 			openUserBase() {
 				uni.navigateTo({
 					url: '../../pages/mail/user-base/user-base?user_id=' + this.item.options.id
+				});
+			},
+			// 
+			openUser() {
+				uni.navigateTo({
+					url: '/pages/mail/user-base/user-base?user_id=' + this.item.from_id
 				});
 			}
 		}

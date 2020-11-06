@@ -28,6 +28,7 @@ export default {
 		}
 	},
 	mutations: {
+		// 修改个人资料
 		updateUser(state, {
 			k,
 			v
@@ -149,7 +150,7 @@ export default {
 			state
 		}) {
 			$H.get('/friend/list').then(res => {
-				state.mailList = res.rows.newList ? res.rows.newList : []
+				state.mailList = res.rows.newList ? res.rows.newList : [];
 				// console.log(state.mailList);
 			})
 		},
