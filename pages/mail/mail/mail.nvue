@@ -6,20 +6,38 @@
 		</free-nav-bar>
 		<!-- 通讯录列表：使用scroll-into-view一定要为scroll组件设置高度 -->
 		<scroll-view scroll-y="true" :style="'height:'+scrollHeight+ 'px;'" :scroll-into-view="scrollInto">
-			<block v-for="(item,i) in list" :key="i">
-				<view :id="'item-'+item.title">
-					<view v-if="item.list.length" class="py-2 px-3 border-bottom bg-light">
-						<text class="font-sm text-dark">{{item.title}}</text>
-					</view>
-					<free-list-item v-for="(item2,index2) in item.list" :key="index2" :cover="item2.avatar?item2.avatar:'/static/images/userpic.png'"
-					 :showRightIcon="false" showRight :title="item2.name" @click="selectItem(item2)">
-						<view slot="right" style="width: 35rpx;height: 35rpx;border: 1px solid grey;" class="rounded-circle flex align-center justify-center mr-4">
-							<view v-if="item2.checked" style="width: 30rpx;height: 30rpx;" class="main-bg-color rounded-circle">
-							</view>
+
+			<template v-if="type==='see'">
+				<free-list-item v-for="(item,index) in typeList" :key="item.key" :showRightIcon="false" showRight :title="item.name"
+				 @click="typeIndex=index">
+					<view slot="right" style="width: 35rpx;height: 35rpx;border: 1px solid grey;" class="rounded-circle flex align-center justify-center mr-4">
+						<view v-if="typeIndex === index" style="width: 30rpx;height: 30rpx;" class="main-bg-color rounded-circle">
 						</view>
-					</free-list-item>
+					</view>
+				</free-list-item>
+
+				<view class="flex-row justify-center mt-4 text-muted">
+					<text v-if="typeIndex===0">公开可见</text>
+					<text v-if="typeIndex===3">仅自己可见</text>
 				</view>
-			</block>
+			</template>
+
+			<template v-if="type!=='see'||(type==='see'&&(typeIndex===1||typeIndex===2))">
+				<block v-for="(item,i) in list" :key="i">
+					<view :id="'item-'+item.title">
+						<view v-if="item.list.length" class="py-2 px-3 border-bottom bg-light">
+							<text class="font-sm text-dark">{{item.title}}</text>
+						</view>
+						<free-list-item v-for="(item2,index2) in item.list" :key="index2" :cover="item2.avatar?item2.avatar:'/static/images/userpic.png'"
+						 :showRightIcon="false" showRight :title="item2.name" @click="selectItem(item2)">
+							<view slot="right" style="width: 35rpx;height: 35rpx;border: 1px solid grey;" class="rounded-circle flex align-center justify-center mr-4">
+								<view v-if="item2.checked" style="width: 30rpx;height: 30rpx;" class="main-bg-color rounded-circle">
+								</view>
+							</view>
+						</free-list-item>
+					</view>
+				</block>
+			</template>
 		</scroll-view>
 
 		<!-- 侧边导航条 -->
@@ -84,6 +102,9 @@
 				let text = '发送'
 				if (this.type === 'createGroup') {
 					text = '创建群组'
+				}
+				if (this.type === 'see' || this.type === 'remind') {
+					text = '确定'
 				}
 				return text + ' (' + this.selectCount + ')'
 			},
@@ -162,7 +183,7 @@
 			},
 			// 提交事件
 			submit() {
-				if (this.selectCount === 0) {
+				if (this.type !== 'see' && this.selectCount === 0) {
 					return uni.showToast({
 						title: '选中项不能为0',
 						icon: 'none'
@@ -180,7 +201,7 @@
 								icon: 'success'
 							});
 							uni.reLaunch({
-								url: "/tabbar/index/index"
+								url: "../../tabbar/index/index"
 							})
 						})
 						break;
@@ -194,6 +215,34 @@
 							options: {
 								from_avatar: item.avatar,
 								id: item.user_id
+							}
+						})
+						uni.navigateBack({
+							delta: 1
+						})
+						break;
+					case 'remind':
+						uni.$emit('sendResult', {
+							type: 'remind',
+							data: this.selectList
+						})
+						uni.navigateBack({
+							delta: 1
+						})
+						break;
+					case 'see':
+						let k = this.typeList[this.typeIndex].key
+						if ((k !== 'all' && k !== 'none') && this.selectList.length === 0) {
+							return uni.showToast({
+								title: '请先选择',
+								icon: 'none'
+							});
+						}
+						uni.$emit('sendResult', {
+							type: 'see',
+							data: {
+								k,
+								v: this.selectList
 							}
 						})
 						uni.navigateBack({

@@ -46,7 +46,9 @@
 			"style": {}
 		}, {
 			"path": "pages/find/moments/moments",
-			"style": {}
+			"style": {
+				"enablePullDownRefresh": true
+			}
 		}, {
 			"path": "pages/my/userinfo/userinfo",
 			"style": {}

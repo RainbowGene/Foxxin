@@ -24,7 +24,7 @@ export default {
 		notice: {
 			avatar: "",
 			user_id: 0,
-			num: 0
+			num: 0 // 未查看动态数
 		}
 	},
 	mutations: {

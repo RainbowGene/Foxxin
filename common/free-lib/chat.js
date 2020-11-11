@@ -116,7 +116,7 @@ class chat {
 	async handleMoment(message) {
 		let notice = this.getNotice()
 		switch (message.type) {
-			case 'new':
+			case 'new': // 新动态
 				if (message.user_id !== this.user.id) {
 					notice.avatar = message.avatar
 					notice.user_id = message.user_id
@@ -126,7 +126,7 @@ class chat {
 				}
 				break;
 			default:
-				if (message.user_id !== this.user.id) {
+				if (message.user_id !== this.user.id) { // 本人不通知
 					notice.avatar = message.avatar
 					notice.user_id = message.user_id
 					notice.num += 1

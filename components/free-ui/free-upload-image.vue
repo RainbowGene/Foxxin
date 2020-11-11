@@ -21,6 +21,7 @@
 </template>
 
 <script>
+	import $H from "@/common/free-lib/request.js"
 	export default {
 		props: {
 			data: {
@@ -46,11 +47,19 @@
 					sizeType: ['compressed'],
 					success: res => {
 						// 上传服务器
-						this.imageList = [...this.imageList, ...res.tempFilePaths]
-						this.$emit('update', this.imageList)
+						res.tempFilePaths.forEach(path => {
+							$H.upload('/upload', {
+								filePath: path
+							}, (process) => {
+								console.log('上传进度', process)
+							}).then(url => {
+								this.imageList.push(url)
+								this.$emit('update', this.imageList)
+							})
+						})
 					}
 				})
-			},   
+			},
 			// 图片预览
 			preview(path) {
 				uni.previewImage({

@@ -5,12 +5,12 @@
 		<view class="position-relative" style="height: 620rpx;">
 			<image src="/static/images/lixin.png" mode="scaleToFill" style="height: 590rpx;" class="bg-secondary w-100"
 			 lazy-load></image>
-			<image class="bg-light rounded position-absolute" src="/static/images/avatar/134.jpg" style="width: 120rpx;height: 120rpx;bottom: 0;right: 30rpx;"></image>
-			<text class="text-white position-absolute" style="bottom: 45rpx;right: 160rpx;">昵称</text>
+			<image class="bg-light rounded position-absolute" :src="user.avatar||'/static/images/avatar/134.jpg'" style="width: 120rpx;height: 120rpx;bottom: 0;right: 30rpx;"></image>
+			<text class="text-white position-absolute" style="bottom: 45rpx;right: 160rpx;">{{user.nickname}}</text>
 		</view>
 		<!-- 朋友圈列表样式 -->
 		<block v-for="(item,index) in list" :key="index">
-			<free-moment-list :item='item' :index="index" @action="doAction"></free-moment-list>
+			<free-moment-list :item='item' :index="index" @action="doAction" @reply="replyEvent"></free-moment-list>
 		</block>
 
 		<!-- 评论框 -->
@@ -19,7 +19,7 @@
 				<!-- 文本输入框 -->
 				<textarea fixed focus class="rounded bg-white font-md flex-1 mx-2" style="height:60rpx;line-height: 60rpx;" v-model="content"></textarea>
 				<free-icon-btn @click="changeFaceModel">&#xe657;</free-icon-btn>
-				<free-main-botton name="发送" :disabled="!content.length" @click="send"></free-main-botton>
+				<free-main-botton name="发送" :disabled="content.length===0" @click="send"></free-main-botton>
 			</view>
 			<!-- 表情 -->
 			<scroll-view v-if="faceModel" scroll-y style="height: 350rpx;">
@@ -31,6 +31,11 @@
 				</view>
 			</scroll-view>
 		</free-popup>
+
+		<!-- 上拉加载 -->
+		<view v-if="list.length>=10" class="flex-row align-center justify-center py-3 bg-light">
+			<text class="text-light-muted font">{{loadmore}}</text>
+		</view>
 	</view>
 </template>
 
@@ -40,6 +45,10 @@
 	import freePopup from "@/components/free-ui/free-popup.vue"
 	import freeIconBtn from "@/components/free-ui/free-icon-btn.vue"
 	import freeMainBotton from "@/components/free-ui/free-main-button.vue"
+	import $H from "@/common/free-lib/request.js"
+	import {
+		mapState
+	} from "vuex"
 	export default {
 		components: {
 			freeTransparentBar,
@@ -53,113 +62,159 @@
 				scrollTop: 0,
 				content: '', // 输入内容
 				commentIndex: -1, // 评论对象
-				list: [{
-						id: 2,
-						avatar: '/static/images/avatar/134.jpg',
-						username: '昵称',
-						context: '以下示例代码，来自于hello uni-app项目，推荐使用HBuilderX，新建uni-app项目，选择hellouni-app模板，可直接体验完整示例。',
-						image: [{
-							src: '/static/images/avatar/134.jpg'
-						}],
-						video: false,
-						create_time: 1567481668,
-						supports: [{ // 点赞
-							id: 1,
-							username: '昵称',
-							avatar: '/static/images/avatar/144.jpg'
-						}],
-						comments: [{ // 评论
-							id: 1,
-							username: '昵称',
-							content: '评论内容'
-						}, {
-							id: 1,
-							username: '昵称',
-							content: '评论内容'
-						}]
-					},
-					{
-						id: 2,
-						avatar: '/static/images/avatar/134.jpg',
-						username: '昵称',
-						context: '',
-						image: [{
-							src: '/static/images/avatar/134.jpg'
-						}, {
-							src: '/static/images/avatar/134.jpg'
-						}, {
-							src: '/static/images/avatar/134.jpg'
-						}],
-						video: false,
-						create_time: 1567481668,
-						supports: [],
-						comments: []
-					},
-					{
-						id: 2,
-						avatar: '/static/images/avatar/134.jpg',
-						username: '昵称',
-						context: '',
-						image: [],
-						video: {
-							poster: "/static/video/demo.jpg",
-							src: '/static/video/demo.mp4',
-						},
-						create_time: 1567481668,
-						supports: [],
-						comments: []
-					}
-				],
+				list: [],
 				faceModel: false,
 				faceList: ["😀", "😁", "😂", "😃", "😄", "😅", "😆", "😉", "😊", "😋", "😎", "😍", "😘", "😗", "😙", "😚", "😇",
 					"😐", "😑", "😶", "😏", "😣", "😥", "😮", "😯", "😪", "😫", "😴", "😌", "😛", "😜", "😝", "😒", "😓", "😔", "😕",
 					"😲", "😷", "😖", "😞", "😟", "😤", "😢", "😭", "😦", "😧", "😨", "😬", "😰", "😱", "😳", "😵", "😡", "😠"
-				]
+				],
+				page: 1,
+				loadmore: '上拉加载更多',
+				key: 'moment_timeline',
+				reply_user: false,
+
+				params: false
+			}
+		},
+		computed: {
+			...mapState({
+				user: state => state.user.user
+			}),
+			nickname() {
+				if (!this.params) {
+					return this.user.nickname || this.user.username
+				}
+				return this.params.name
+			},
+			avatar() {
+				let avatar = ''
+				avatar = !this.params ? this.user.avatar : this.params.avatar
+				return avatar || '/static/images/userpic.png'
 			}
 		},
 		onPageScroll(e) {
 			this.scrollTop = e.scrollTop
 		},
+		onReachBottom() {
+			if (this.loadmore !== '上拉加载更多') return;
+			this.page++;
+			this.loadmore = '加载中...'
+			this.getData().catch(err => {
+				this.page--
+				uni.showToast({
+					title: '刷新失败',
+					icon: 'none'
+				});
+				this.loadmore = '上拉加载更多'
+			})
+		},
+		onPullDownRefresh() {
+			this.page = 1
+			this.getData().then(res => {
+				uni.showToast({
+					title: '刷新成功',
+					icon: 'none'
+				});
+				uni.stopPullDownRefresh()
+			}).catch(err => {
+				uni.showToast({
+					title: '刷新失败',
+					icon: 'none'
+				});
+				uni.stopPullDownRefresh()
+			})
+		},
+		onLoad(e) {
+			if (e.key) this.key = e.key
+
+			if (e.params) {
+				this.params = JSON.parse(decodeURIComponent(e.params))
+				console.log(this.params);
+			}
+			this.page = 1
+			this.getData()
+
+			// 在朋友圈页面开启朋友圈更新监听事件
+			uni.$on('momentNotice', this.momentNotice)
+		},
+		destroyed() {
+			uni.$off('momentNotice', this.momentNotice)
+		},
+		onShow() {
+			// this.momentNotice()
+		},
 		methods: {
+			getData() {
+				return new Promise((resolve, reject) => {
+					let page = this.page
+					$H.get('/' + this.key + '/' + this.page, {}).then(res => {
+						this.list = page === 1 ? res : [...this.list, ...res]
+						this.loadmore = this.list.length === (this.page * 10) ? '上拉加载更多' : '没有更多了';
+						resolve(res)
+					}).catch(err => {
+						reject(err)
+					})
+				})
+			},
 			// 点击更多
-			doAction(obj) {
+			doAction(e) {
 				uni.showActionSheet({
 					itemList: ['点赞', '评论'],
 					success: res => {
 						if (res.tapIndex === 0) {
-							this.doSupport(obj)
+							this.doSupport(e)
 						} else {
 							this.content = ''
 							this.faceModel = false
-							this.commentIndex = obj.index
+							this.commentIndex = e.index
+							this.reply_user = false
 							this.$refs.action.show()
 						}
 					}
 				})
 			},
 			// 点赞
-			doSupport(obj) {
-				console.log(obj)
-				let id = 1; // 用户id
-				let username = "起飞"
-				obj.item.supports.push({
-					id,
-					username
+			doSupport(e) {
+				$H.post('/moment/like', {
+					id: e.item.moment_id
+				}).then(res => {
+					let i = e.item.likes.findIndex(i => i.id === this.user.id)
+					if (i !== -1) { // 取消点赞
+						e.item.likes.splice(i, 1)
+					} else { // 点赞
+						e.item.likes.push({
+							id: this.user.id,
+							name: this.user.nickname || this.user.username
+						})
+					}
+					uni.showToast({
+						title: i !== -1 ? '取消成功' : '点赞+1',
+						icon: 'none'
+					});
 				})
 			},
 			// 发送评论
 			send() {
-				console.log(this.commentIndex)
-				this.list[this.commentIndex].comments.push({
-					id: 1,
-					username: 'me',
-					content: this.content
+				let item = this.list[this.commentIndex]
+				$H.post('/moment/comment', {
+					id: item.moment_id,
+					content: this.content,
+					reply_id: this.reply_user ? this.reply_user.id : 0
+				}).then(res => {
+					item.comments.push({
+						content: this.content,
+						user: {
+							id: this.user.id,
+							name: this.user.nickname || this.user.username
+						},
+						reply: this.reply ? this.reply : null
+					})
+					uni.showToast({
+						title: '评论成功',
+						icon: 'none'
+					})
 				})
 				this.$refs.action.hidden()
-				uni.showToast({
-					title: '评论成功',
-					icon: 'none'
-				})
 			},
 			// 添加表情
 			addFace(item) {
@@ -182,7 +237,7 @@
 					key: 'video'
 				}, {
 					name: '文字',
-					key: 'text'
+					key: 'content'
 				}, ]
 				uni.showActionSheet({
 					itemList: list.map(v => v.name),
@@ -193,6 +248,24 @@
 							})
 						}
 					}
+				})
+			},
+			// 点击评论，回复评论
+			replyEvent(e) {
+				this.content = ''
+				this.faceModel = false
+				this.commentIndex = e.index
+				this.reply_user = e.reply
+				this.$refs.action.show()
+			},
+			momentNotice() {
+				// 刷新当前页
+				this.page = 1
+				this.getData().then(res => {
+					uni.showToast({
+						title: '朋友圈已更新！',
+						icon: 'none'
+					});
 				})
 			}
 		}
